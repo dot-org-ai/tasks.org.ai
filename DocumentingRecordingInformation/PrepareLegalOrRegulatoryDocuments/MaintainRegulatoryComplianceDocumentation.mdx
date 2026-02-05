@@ -85,6 +85,36 @@ Maintaining regulatory and compliance documentation involves keeping policies, p
 | getAuditRecords | Retrieve audit documentation by date, scope, or findings |
 | findByRegulation | List all documents related to a specific regulatory requirement |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ComplianceDocument ||--o{ PolicyVersion : "has"
+    ComplianceDocument ||--o{ ChangeLog : "tracks"
+    ComplianceDocument ||--o| ExpirationTracker : "monitored-by"
+    Certification ||--o{ ComplianceDocument : "validates"
+    AuditRecord ||--o{ ComplianceDocument : "reviews"
+    AuditRecord ||--o{ ControlEvidence : "includes"
+    ComplianceDocument ||--o{ ControlEvidence : "supports"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> UnderReview : documentCataloged
+    UnderReview --> Current : currencyReviewed
+    Current --> NeedsUpdate : regulatoryChangeDetected
+    NeedsUpdate --> UnderReview : documentUpdated
+    Current --> ApproachingExpiration : expirationApproaching
+    ApproachingExpiration --> UnderReview : reviewForCurrency
+    Current --> AuditReady : auditPackageProduced
+    AuditReady --> Current : completenessVerified
+    Current --> Superseded : supersededArchived
+    Superseded --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -130,7 +160,7 @@ await compliance.catalogDocument({
   title: 'Information Security Policy',
   regulation: 'SOC-2',
   type: 'policy',
-  owner: 'ciso@company.com',
+  owner: 'ciso@acme-corp.com.ai',
   reviewCycle: '12 months'
 })
 

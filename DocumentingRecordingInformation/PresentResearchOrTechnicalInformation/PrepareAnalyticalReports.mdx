@@ -81,6 +81,34 @@ Preparing analytical reports involves transforming raw data into structured insi
 | getReportsByMethodology | Locate reports that used a particular analytical method |
 | findPendingReviews | Identify reports awaiting quality review |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    AnalyticalReport ||--|| AnalysisScope : "defined-by"
+    AnalysisScope ||--o{ DataSource : "uses"
+    AnalyticalReport ||--o{ Finding : "presents"
+    AnalyticalReport ||--o{ Visualization : "contains"
+    ReportDistribution }o--|| AnalyticalReport : "delivers"
+    Finding }o--o{ Visualization : "illustrated-by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ScopeDefinition
+    ScopeDefinition --> DataAggregation : scopeDefined
+    DataAggregation --> Analysis : dataAggregated
+    Analysis --> Drafting : analysisExecuted
+    Drafting --> Visualization : findingsDrafted
+    Visualization --> QualityReview : visualizationsGenerated
+    QualityReview --> Revision : reportReviewed
+    Revision --> Drafting
+    QualityReview --> Distribution : reportReviewed
+    Distribution --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,8 +119,12 @@ graph TD
     D --> E[generateVisualizations]
     E --> F[reviewReport]
     F --> G{Approved?}
-    G -->|No| D
-    G -->|Yes| H[distributeReport]
+    G -->|No| H[Revise Findings]
+    H --> D
+    G -->|Yes| I[distributeReport]
+    I --> J{Additional Analysis Needed?}
+    J -->|Yes| A
+    J -->|No| K[Archive]
 ```
 
 ## Actor Relationships

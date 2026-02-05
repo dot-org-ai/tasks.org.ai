@@ -82,6 +82,35 @@ Providing basic needs for children encompasses the full spectrum of essential ca
 | getIncidents | Find safety reports by date or severity |
 | getMilestones | Track developmental progress across age groups |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ChildProfile ||--|| CareSchedule : has
+    CareSchedule ||--|| NutritionalPlan : includes
+    ChildProfile ||--o{ HealthRecord : maintains
+    ChildProfile ||--o{ SafetyIncident : may-have
+    ChildProfile ||--o{ DevelopmentalMilestone : tracks
+    CareSchedule }o--|| HealthRecord : informs
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Assessed
+    Assessed --> Fed : mealProvided
+    Fed --> Clean : hygieneCompleted
+    Clean --> Safe : safetyVerified
+    Safe --> Developing : supportDevelopment
+    Developing --> Milestone : milestoneReached
+    Developing --> Documented : careDocumented
+    Safe --> IncidentLogged : incidentReported
+    IncidentLogged --> Assessed : needsReassessed
+    Milestone --> Documented
+    Documented --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -122,13 +151,13 @@ const childcare = provideBasicNeedsChildren()
 
 // Assess a child's current needs
 const assessment = await childcare.assessNeeds({
-  childId: 'child-789',
+  childId: 'CHILD-2026-0789',
   areas: ['nutrition', 'hygiene', 'safety', 'development']
 })
 
 // Prepare and provide a meal
 await childcare.prepareMeal({
-  childId: 'child-789',
+  childId: 'CHILD-2026-0789',
   mealType: 'lunch',
   dietaryRestrictions: ['nut-free', 'dairy-free'],
   servingTime: '12:00'
@@ -136,7 +165,7 @@ await childcare.prepareMeal({
 
 // Document daily care activities
 await childcare.documentCare({
-  childId: 'child-789',
+  childId: 'CHILD-2026-0789',
   date: '2026-02-05',
   activities: ['breakfast', 'outdoor-play', 'nap', 'hygiene'],
   observations: 'Active participation in group activities'
@@ -164,3 +193,24 @@ childcare.milestoneReached(async ({ childId, milestone }) => {
     achievedDate: new Date()
   })
 })
+
+// Monitor nutritional patterns
+childcare.mealProvided(async ({ childId, amountConsumed, mealType }) => {
+  if (amountConsumed < 50) {
+    const recentMeals = await childcare.getCareSchedules({
+      childId,
+      activityType: 'meals',
+      daysBack: 3
+    })
+
+    const lowIntakeCount = recentMeals.filter(m => m.amountConsumed < 50).length
+    if (lowIntakeCount >= 4) {
+      await childcare.assessNeeds({
+        childId,
+        focusArea: 'nutrition',
+        reason: 'Consistently low meal intake'
+      })
+    }
+  }
+})
+```

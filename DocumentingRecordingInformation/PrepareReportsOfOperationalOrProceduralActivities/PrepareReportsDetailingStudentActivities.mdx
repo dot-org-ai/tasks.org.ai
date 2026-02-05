@@ -85,17 +85,51 @@ Preparing reports on student activities and performance involves collecting acad
 | getAggregateData | Retrieve performance statistics by class, grade, or school |
 | searchByStandard | Find reports related to specific academic standards |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ProgressReport ||--o| ReportCard : "summarized-in"
+    ReportCard ||--|| AttendanceRecord : "includes"
+    ReportCard ||--o{ BehaviorLog : "references"
+    ReportCard ||--|| TranscriptEntry : "generates"
+    IEPProgressReport }o--|| ProgressReport : "specialized-type"
+    AggregateReport ||--o{ ProgressReport : "aggregates"
+    TranscriptEntry }o--|| ReportCard : "derived-from"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> DataCollection
+    DataCollection --> AttendanceTracking : performanceDataCollected
+    AttendanceTracking --> BehaviorDocumentation : attendanceRecorded
+    BehaviorDocumentation --> ReportGeneration : behaviorIncidentLogged
+    BehaviorDocumentation --> ReportGeneration
+    ReportGeneration --> ReportCardAssembly : progressReportGenerated
+    ReportCardAssembly --> Aggregation : reportCardCompiled
+    Aggregation --> Distribution : aggregateReportPrepared
+    Distribution --> TranscriptUpdate : reportsDistributed
+    TranscriptUpdate --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[collectPerformanceData] --> B[recordAttendance]
-    B --> C[logBehaviorIncident]
-    C --> D[generateProgressReport]
-    D --> E[compileReportCard]
-    E --> F[prepareAggregateReport]
-    F --> G[distributeReports]
-    G --> H[updateTranscript]
+    B --> C{Behavior Issues?}
+    C -->|Yes| D[logBehaviorIncident]
+    C -->|No| E[generateProgressReport]
+    D --> E
+    E --> F[compileReportCard]
+    F --> G[prepareAggregateReport]
+    G --> H[distributeReports]
+    H --> I{End of Term?}
+    I -->|Yes| J[updateTranscript]
+    I -->|No| A
+    J --> A
 ```
 
 ## Actor Relationships
@@ -139,7 +173,7 @@ const reportCard = await reports.compileReportCard({
 await reports.distributeReports({
   reportIds: [progress.id, reportCard.id],
   recipients: ['parent-portal', 'email'],
-  parentEmail: 'parent@email.com'
+  parentEmail: 'parent@email.com.ai'
 })
 ```
 

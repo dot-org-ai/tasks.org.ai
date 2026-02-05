@@ -84,6 +84,37 @@ Patient daily activity assistance encompasses the planning, delivery, and docume
 | getSchedule | Retrieve upcoming care visits for a patient or aide |
 | findIncidents | List incident reports by type, severity, or date |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    PatientProfile ||--o{ CarePlan : has
+    CarePlan ||--o{ TaskChecklist : contains
+    CarePlan ||--|| AssistanceSchedule : defines
+    TaskChecklist ||--o{ ActivityRecord : generates
+    PatientProfile ||--o{ FunctionalAssessment : undergoes
+    FunctionalAssessment ||--|| CarePlan : informs
+    ActivityRecord }o--o{ IncidentReport : may-trigger
+    IncidentReport }o--|| PatientProfile : documents
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Assessed
+    Assessed --> Planned : carePlanCreated
+    Planned --> Scheduled : assignCareAide
+    Scheduled --> InProgress : logActivity
+    InProgress --> InProgress : activityLogged
+    InProgress --> NeedsReview : taskDeclined
+    NeedsReview --> Escalated : issueEscalated
+    Escalated --> Reassessed : functionAssessed
+    Reassessed --> Planned : scheduleUpdated
+    InProgress --> Completed : sessionCompleted
+    Completed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -124,7 +155,7 @@ const care = assistPatientsDailyActivities()
 
 // Create a care plan for a new patient
 const plan = await care.createCarePlan({
-  patientId: 'pt-2201',
+  patientId: 'PT-2026-2201',
   tasks: ['bathing', 'dressing', 'mealPrep', 'mobility'],
   frequency: 'daily',
   startDate: '2026-02-10'
@@ -140,7 +171,7 @@ await care.logActivity({
 
 // Run a functional assessment
 const assessment = await care.assessFunction({
-  patientId: 'pt-2201',
+  patientId: 'PT-2026-2201',
   categories: ['bathing', 'dressing', 'eating', 'toileting', 'transferring']
 })
 ```
@@ -163,6 +194,17 @@ care.taskDeclined(async ({ patientId, task, count }) => {
       patientId,
       categories: [task],
       reason: 'repeated-decline'
+    })
+  }
+})
+
+// Auto-escalate if session takes too long
+care.sessionCompleted(async ({ patientId, duration, scheduledDuration }) => {
+  if (duration > scheduledDuration * 1.5) {
+    await care.escalateIssue({
+      patientId,
+      issue: 'Extended care session may indicate increased assistance needs',
+      severity: 'medium'
     })
   }
 })

@@ -46,7 +46,7 @@ Patient feeding involves preparing meals according to dietary restrictions, safe
 | MealPlan | Scheduled meals with preferences and portion sizes |
 | FeedingAssistance | Technique and support level required for safe eating |
 | IntakeRecord | Documentation of food and fluid consumption |
-| AspirationsRisk | Swallowing safety assessment and precautions |
+| AspirationRisk | Swallowing safety assessment and precautions |
 | NutritionStatus | Weight trends, albumin levels, and malnutrition screening |
 
 ## Actions
@@ -81,6 +81,35 @@ Patient feeding involves preparing meals according to dietary restrictions, safe
 | getDietOrders | Retrieve dietary prescriptions by patient or restriction type |
 | getIntakeRecords | Find nutrition documentation by patient or date range |
 | getNutritionConcerns | Review patients with poor intake or weight loss |
+
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Patient ||--|| DietaryOrder : has
+    DietaryOrder ||--|| MealPlan : guides
+    Patient ||--|| FeedingAssistance : requires
+    Patient ||--|| AspirationRisk : assessed-for
+    FeedingAssistance ||--o{ IntakeRecord : generates
+    IntakeRecord }o--|| NutritionStatus : contributes-to
+    Patient ||--o{ NutritionStatus : monitored-by
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> OrderVerified
+    OrderVerified --> Positioned : patientPositioned
+    Positioned --> MealReady : mealPrepared
+    MealReady --> Feeding : assistWithFeeding
+    Feeding --> Feeding : swallowingMonitored
+    Feeding --> Documented : intakeDocumented
+    Documented --> ConcernRaised : concernsReported
+    Documented --> Completed : adequateIntake
+    ConcernRaised --> [*]
+    Completed --> [*]
+```
 
 ## Workflow
 
@@ -122,7 +151,7 @@ const feeding = feedPatients()
 
 // Verify diet order before meal
 const verification = await feeding.verifyDietOrder({
-  patientId: 'PT-2026-789',
+  patientId: 'PT-2026-0789',
   mealType: 'Lunch',
   dietOrder: 'Mechanical soft, thin liquids, low sodium',
   mealTray: {
@@ -135,7 +164,7 @@ const verification = await feeding.verifyDietOrder({
 
 // Position patient safely for eating
 await feeding.positionPatient({
-  patientId: 'PT-2026-789',
+  patientId: 'PT-2026-0789',
   position: 'Head of bed elevated 90 degrees',
   supportProvided: 'Pillow behind back for stability',
   aspirationRisk: 'Moderate - requires upright position and small bites'
@@ -143,7 +172,7 @@ await feeding.positionPatient({
 
 // Assist with feeding
 await feeding.assistWithFeeding({
-  patientId: 'PT-2026-789',
+  patientId: 'PT-2026-0789',
   mealType: 'Lunch',
   startTime: '12:15',
   technique: 'Verbal cues for each bite, patient self-feeds with setup',
@@ -155,7 +184,7 @@ await feeding.assistWithFeeding({
 
 // Document intake
 await feeding.documentIntake({
-  patientId: 'PT-2026-789',
+  patientId: 'PT-2026-0789',
   mealType: 'Lunch',
   percentageEaten: 75,
   fluidsConsumed: 180, // ml
@@ -191,6 +220,23 @@ feeding.swallowingMonitored(async ({ patientId, signs }) => {
       to: 'registered-nurse',
       priority: 'urgent',
       message: `Swallowing difficulty noted for ${patientId} - speech therapy consult may be needed`
+    })
+  }
+})
+
+// Track nutrition trends
+feeding.intakeDocumented(async ({ patientId, percentageEaten, date }) => {
+  const recentIntakes = await feeding.getIntakeRecords({
+    patientId,
+    startDate: subtractDays(date, 7)
+  })
+
+  const avgIntake = calculateAverage(recentIntakes.map(r => r.percentageEaten))
+  if (avgIntake < 60) {
+    await feeding.reportConcerns({
+      patientId,
+      concern: `Low average intake over 7 days: ${avgIntake}%`,
+      recommendation: 'Comprehensive nutrition assessment needed'
     })
   }
 })
