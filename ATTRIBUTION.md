@@ -4,37 +4,41 @@ This document provides detailed attribution for all data sources used in tasks.o
 
 ## Data Sources
 
-### O*NET Task Statements 28.0
+### O*NET 30.0 Database (August 2025)
 
-- **Source**: [O*NET OnLine](https://www.onetonline.org)
-- **License**: Public Domain (U.S. Government Work)
-- **Copyright**: U.S. Department of Labor/Employment and Training Administration
-- **Data Used**: 19,000+ task statements across 923 occupations
-- **Attribution Required**: Yes (courtesy)
-- **Changes Made**: GraphDL semantic parsing, verb extraction, workflow mapping
+- **Source**: [O*NET Resource Center](https://www.onetcenter.org/database.html)
+- **Copyright**: U.S. Department of Labor, Employment and Training Administration (USDOL/ETA)
+- **License**: CC BY 4.0
+- **Data Used**: Work Activities (41), Intermediate Work Activities (331), Detailed Work Activities (2,086), Task Statements (18,797), Task-to-DWA mappings
+- **Attribution Required**: Yes (required by license)
+- **Changes Made**: Hierarchical structuring, MDX generation, Business-as-Code API modeling, action/object extraction
 
 **Citation**:
 ```
-O*NET 28.0 Task Statements
-U.S. Department of Labor, Employment and Training Administration
-https://www.onetonline.org
-Public Domain
+O*NET 30.0 Database
+National Center for O*NET Development
+U.S. Department of Labor, Employment and Training Administration (USDOL/ETA)
+https://www.onetcenter.org/database.html
+Licensed under CC BY 4.0
 ```
+
+**Required Notice**:
+This product uses the O*NET(tm) API by the U.S. Department of Labor, Employment and Training Administration (USDOL/ETA). O*NET(tm) has neither approved nor endorsed this product.
 
 ## How We Use This Data
 
-The tasks.org.ai ontology extends O*NET Task Statements by:
+The tasks.org.ai ontology extends O*NET work activities by:
 
-1. **Semantic Parsing**: Extracting verbs and objects using GraphDL patterns
-2. **Workflow Mapping**: Connecting tasks to business processes and autonomous agent operations
-3. **Capability Definitions**: Defining what autonomous agents can accomplish
-4. **Task Hierarchies**: Building relationships between tasks and occupations
-5. **Business-as-Code Integration**: Enabling `$.Agent.executes.Task` semantic patterns
-6. **SDK Integration**: Seamless integration with sdk.do and the .org.ai ecosystem
+1. **Hierarchical Structure**: WorkActivity → IWA → DWA three-level taxonomy
+2. **Business-as-Code**: Modeling each DWA as a programmable API definition
+3. **Cross-References**: Linking activities to occupations, tasks, skills, and abilities
+4. **MDX Documentation**: Structured documentation with actors, actions, events, and workflows
+5. **SDK Integration**: Enabling `@headlessly/{action}-{object}` package patterns
+6. **Task Mapping**: Connecting 18,797 occupation-specific tasks to 2,086 generalized DWAs
 
 ## Our License
 
-This derived work is licensed under Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0). While the original O*NET data is in the Public Domain, we apply CC BY-SA 4.0 to our derived work to ensure attribution and that improvements remain open.
+This derived work is licensed under Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0). The original O*NET data is licensed under CC BY 4.0. We apply CC BY-SA 4.0 to our derived work to ensure attribution and that improvements remain open.
 
 ## Required Attribution
 
@@ -42,14 +46,16 @@ When using tasks.org.ai, please include:
 
 ```
 Based on tasks.org.ai (https://tasks.org.ai)
-Data sourced from O*NET 28.0 Task Statements (https://www.onetonline.org)
+Data sourced from O*NET 30.0 Database (https://www.onetcenter.org/database.html)
 U.S. Department of Labor, Employment and Training Administration
 Licensed under CC BY-SA 4.0
 ```
 
 ## Acknowledgments
 
-We are grateful to the U.S. Department of Labor's Employment and Training Administration for the comprehensive task statements in O*NET. These detailed descriptions of work activities across hundreds of occupations enable better understanding of job requirements and workforce development.
+We are grateful to the National Center for O*NET Development and the U.S. Department of Labor for developing and maintaining the O*NET database, the nation's primary source of occupational information.
+
+O*NET, the Occupational Information Network, is developed under the sponsorship of the U.S. Department of Labor, Employment and Training Administration, and replaces the Dictionary of Occupational Titles (DOT).
 
 ## Contact
 
@@ -57,7 +63,3 @@ For questions about attribution or licensing:
 - Website: https://tasks.org.ai
 - GitHub: https://github.com/dot-org-ai/tasks.org.ai/issues
 - Community: https://github.com/dot-org-ai/community
-
-## Updates
-
-This attribution document is maintained alongside the tasks.org.ai repository. Last updated: 2025-01-17

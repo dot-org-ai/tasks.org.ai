@@ -1,0 +1,170 @@
+---
+name: Control Prescription Refills Authorizations
+dwaCode: 4.A.4.c.3.I06.D02
+dwaTitle: Control prescription refills or authorizations.
+iwa: Prescribe medical treatments or devices
+iwaCode: 4.A.4.c.3.I06
+workActivity: Monitoring and Controlling Resources
+workActivityCode: 4.A.4.c.3
+action: Control
+object: Prescription Refills Authorizations
+---
+
+# Control Prescription Refills Authorizations
+
+> Business-as-Code definition for managing prescription renewal and authorization workflows. Models refill requests, prior authorization processing, and medication continuity oversight.
+
+## Overview
+
+Controlling prescription refills involves processing patient renewal requests, managing refill limits, and coordinating prior authorizations with insurance payers. This definition provides actions for refill approval, events for expiration alerts, and searches for authorization status.
+
+## Actors
+
+| Actor | Description |
+|-------|-------------|
+| Patient | Requests medication refills and authorization renewals |
+| Pharmacy | Dispenses medications and submits refill requests |
+| InsurancePayer | Reviews medical necessity and approves coverage |
+| PriorAuthVendor | Processes authorization submissions and appeals |
+| MedicalSupplier | Provides specialty medications and devices |
+| Regulator | Enforces controlled substance monitoring requirements |
+
+## Roles
+
+| Role | Description |
+|------|-------------|
+| PrescribingProvider | Authorizes refills and clinical appropriateness |
+| PharmacyCoordinator | Manages refill workflows and patient outreach |
+| AuthorizationSpecialist | Submits and tracks prior authorization requests |
+| ClinicalReviewer | Assesses ongoing medication necessity |
+
+## Entities
+
+| Entity | Description |
+|--------|-------------|
+| Prescription | Original medication order with refill allowance |
+| RefillRequest | Patient or pharmacy request for renewal |
+| Authorization | Insurance approval for medication coverage |
+| RefillHistory | Record of previous dispensing dates and quantities |
+| Appeal | Request for reconsideration of denied authorization |
+| ExpirationAlert | Notice of approaching prescription end date |
+
+## Actions
+
+| Action | Description |
+|--------|-------------|
+| processRefill | Review and approve medication renewal request |
+| denyRefill | Reject refill due to clinical or safety concerns |
+| requestAuthorization | Submit prior authorization to payer |
+| trackAuthorization | Monitor status of pending approval |
+| approveRefill | Grant authorization for medication renewal |
+| extendPrescription | Add additional refills to existing order |
+| setRefillLimit | Define maximum number of renewals allowed |
+
+## Events
+
+| Event | Description |
+|-------|-------------|
+| refillProcessed | Medication renewal approved and sent to pharmacy |
+| refillDenied | Renewal request rejected |
+| authorizationRequested | Prior authorization submitted to payer |
+| authorizationApproved | Insurance approval received |
+| authorizationDenied | Coverage rejected by payer |
+| prescriptionExtended | Additional refills granted |
+| expirationWarning | Prescription approaching end of refill allowance |
+
+## Searches
+
+| Search | Description |
+|--------|-------------|
+| findRefills | List refill requests by patient, medication, or status |
+| getAuthorizations | Retrieve pending or approved authorizations |
+| getHistory | View previous refill dates and dispensed quantities |
+| getExpiringPrescriptions | Find prescriptions nearing refill limit |
+
+## Workflow
+
+```mermaid
+graph TD
+    A[RefillRequest] --> B{Refills Remaining?}
+    B -->|Yes| C[approveRefill]
+    B -->|No| D[extendPrescription]
+    D --> E{Authorization Required?}
+    E -->|Yes| F[requestAuthorization]
+    E -->|No| C
+    F --> G{Approved?}
+    G -->|Yes| C
+    G -->|Denied| H[denyRefill]
+    C --> I[refillProcessed]
+```
+
+## Actor Relationships
+
+```mermaid
+graph LR
+    PP[PrescribingProvider]
+
+    PP -->|authorizes refills for| Patient
+    PP -->|sends approvals to| Pharmacy
+    PP -->|submits authorization to| InsurancePayer
+    PP -->|coordinates specialty meds with| MedicalSupplier
+    PP -->|reports controlled substances to| Regulator
+```
+
+## Usage
+
+### Calling Actions
+
+```typescript
+import { controlPrescriptionRefillsAuthorizations } from '@headlessly/control-prescription-refills-authorizations'
+
+const refills = controlPrescriptionRefillsAuthorizations()
+
+// Approve routine refill request
+await refills.approveRefill({
+  prescriptionId: 'RX-456',
+  requestId: 'REF-789',
+  dispenseQuantity: 30,
+  pharmacyId: 'PHARM-001'
+})
+
+// Submit prior authorization for specialty medication
+const auth = await refills.requestAuthorization({
+  prescriptionId: 'RX-890',
+  medication: 'Adalimumab 40mg',
+  diagnosis: 'Rheumatoid arthritis',
+  clinicalJustification: 'Failed methotrexate therapy',
+  payerId: 'INS-123'
+})
+
+// Track authorization status
+const status = await refills.trackAuthorization({
+  authorizationId: auth.id
+})
+```
+
+### Event-Driven Automation
+
+```typescript
+// Alert patient when prescription is expiring
+refills.expirationWarning(async ({ prescriptionId, patientId, daysRemaining }) => {
+  if (daysRemaining <= 7) {
+    const patient = await getPatient(patientId)
+    await sendNotification({
+      to: patient.phone,
+      message: `Your prescription expires in ${daysRemaining} days. Contact your provider to renew.`
+    })
+  }
+})
+
+// Auto-extend chronic medications
+refills.refillProcessed(async ({ prescriptionId, medication }) => {
+  const chronic = ['Lisinopril', 'Metformin', 'Levothyroxine']
+  if (chronic.includes(medication.name)) {
+    await refills.extendPrescription({
+      prescriptionId,
+      additionalRefills: 6
+    })
+  }
+})
+```

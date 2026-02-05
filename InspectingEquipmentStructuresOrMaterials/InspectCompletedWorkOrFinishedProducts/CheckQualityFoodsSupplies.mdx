@@ -1,0 +1,178 @@
+---
+name: Check Quality Foods Supplies
+dwaCode: 4.A.1.b.2.I06.D12
+dwaTitle: Check quality of foods or supplies.
+iwa: Inspect completed work or finished products
+iwaCode: 4.A.1.b.2.I06
+workActivity: Inspecting Equipment, Structures, or Materials
+workActivityCode: 4.A.1.b.2
+action: Check
+object: Quality Foods Supplies
+---
+
+# Check Quality Foods Supplies
+
+> Business-as-Code definition for food and supply quality control workflows. Models the complete inspection process from receiving through testing, approval, and disposition decisions.
+
+## Overview
+
+Food and supply quality inspection involves systematic evaluation of incoming materials against safety standards, specifications, and regulatory requirements. This definition exposes actions for conducting inspections, performing tests, documenting results, and coordinating with suppliers on quality issues.
+
+## Actors
+
+| Actor | Description |
+|-------|-------------|
+| Supplier | Provides food products and materials for inspection |
+| Laboratory | Performs microbiological and chemical analysis |
+| Regulator | Enforces food safety and quality standards |
+| Customer | Consumes products meeting quality requirements |
+| Distributor | Receives approved products for delivery |
+| WarehouseManager | Stores accepted inventory under proper conditions |
+
+## Roles
+
+| Role | Description |
+|------|-------------|
+| QualityInspector | Conducts visual and sensory evaluations |
+| FoodSafetySpecialist | Ensures compliance with safety regulations |
+| LabTechnician | Performs chemical and microbiological testing |
+| QualityManager | Reviews results and makes acceptance decisions |
+
+## Entities
+
+| Entity | Description |
+|--------|-------------|
+| Shipment | Batch of food or supplies received for inspection |
+| Inspection | Systematic quality assessment of materials |
+| Sample | Representative portion submitted for testing |
+| TestResult | Laboratory analysis outcome |
+| NonConformance | Deviation from quality specifications |
+| Certificate | Documented proof of quality approval |
+
+## Actions
+
+| Action | Description |
+|--------|-------------|
+| receiveShipment | Log incoming food or supply delivery |
+| performInspection | Conduct visual and sensory quality check |
+| collectSample | Obtain representative portion for testing |
+| requestTesting | Submit sample to laboratory for analysis |
+| reviewResults | Evaluate test outcomes against specifications |
+| documentNonConformance | Record quality deviations and defects |
+| approveShipment | Accept materials meeting quality standards |
+
+## Events
+
+| Event | Description |
+|-------|-------------|
+| shipmentReceived | Materials have arrived for inspection |
+| inspectionPerformed | Quality assessment has been completed |
+| sampleCollected | Representative portion has been obtained |
+| testingRequested | Laboratory analysis has been initiated |
+| resultsReviewed | Test outcomes have been evaluated |
+| nonConformanceDocumented | Quality deviation has been recorded |
+| shipmentApproved | Materials have been accepted for use |
+
+## Searches
+
+| Search | Description |
+|--------|-------------|
+| findShipments | List deliveries by supplier, date, or status |
+| getInspections | Retrieve quality assessments by result |
+| getTestResults | Find laboratory analysis by parameter |
+| getNonConformances | List quality deviations by severity |
+
+## Workflow
+
+```mermaid
+graph TD
+    A[receiveShipment] --> B[performInspection]
+    B --> C{Pass Visual?}
+    C -->|No| D[documentNonConformance]
+    C -->|Yes| E[collectSample]
+    E --> F[requestTesting]
+    F --> G[reviewResults]
+    G --> H{Pass Tests?}
+    H -->|Yes| I[approveShipment]
+    H -->|No| D
+    D --> J[Reject/Return]
+```
+
+## Actor Relationships
+
+```mermaid
+graph LR
+    QualityInspector -->|inspects shipment from| Supplier
+    QualityInspector -->|submits samples to| Laboratory
+    LabTechnician -->|reports results to| QualityManager
+    QualityManager -->|coordinates with| Supplier
+    FoodSafetySpecialist -->|ensures compliance for| Regulator
+    QualityManager -->|releases inventory to| WarehouseManager
+```
+
+## Usage
+
+### Calling Actions
+
+```typescript
+import { checkQualityFoodsSupplies } from '@headlessly/check-quality-foods-supplies'
+
+const qualityControl = checkQualityFoodsSupplies()
+
+// Log incoming produce shipment
+const shipment = await qualityControl.receiveShipment({
+  supplierId: 'SUP-3891',
+  receivedDate: '2026-02-05T06:30:00Z',
+  productType: 'fresh_produce',
+  quantity: 500,
+  units: 'kg',
+  poNumber: 'PO-45789'
+})
+
+// Perform initial visual inspection
+await qualityControl.performInspection({
+  shipmentId: shipment.id,
+  inspectionType: 'receiving',
+  criteria: ['appearance', 'freshness', 'temperature', 'packaging'],
+  findings: {
+    appearance: 'acceptable',
+    freshness: 'good',
+    temperature: 4.2,
+    packaging: 'intact'
+  }
+})
+
+// Request microbiological testing
+await qualityControl.requestTesting({
+  shipmentId: shipment.id,
+  testTypes: ['coliform', 'salmonella', 'listeria'],
+  priority: 'routine'
+})
+```
+
+### Event-Driven Automation
+
+```typescript
+// Auto-reject shipments failing visual inspection
+qualityControl.inspectionPerformed(async ({ shipmentId, findings }) => {
+  if (findings.temperature > 8 || findings.appearance === 'unacceptable') {
+    await qualityControl.documentNonConformance({
+      shipmentId,
+      reason: 'failed_receiving_inspection',
+      disposition: 'reject'
+    })
+  }
+})
+
+// Alert on positive pathogen tests
+qualityControl.resultsReviewed(async ({ shipmentId, testResults }) => {
+  const pathogens = testResults.filter(r => r.parameter === 'salmonella' && r.result === 'positive')
+  if (pathogens.length > 0) {
+    await notify({
+      to: 'food_safety_team',
+      priority: 'critical',
+      message: `Pathogen detected in shipment ${shipmentId}`
+    })
+  }
+})
+```
