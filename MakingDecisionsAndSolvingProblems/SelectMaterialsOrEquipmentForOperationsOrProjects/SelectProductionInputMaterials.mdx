@@ -80,6 +80,33 @@ Selecting production input materials involves evaluating raw materials, componen
 | getQualificationResults | Retrieve test results for material samples by specification or supplier |
 | getApprovedMaterials | List materials authorized for production filtered by product line or category |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MaterialSpecification ||--|{ MaterialCandidate : "evaluated-against"
+    MaterialCandidate ||--|{ QualificationTest : "tested-in"
+    MaterialCandidate }o--|| SupplierCertification : "certified-via"
+    SupplierCertification ||--|| MaterialApproval : "enables"
+    MaterialApproval ||--|| PurchaseAgreement : "governed-by"
+    QualificationTest }o--|| MaterialApproval : "supports"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> SpecificationDefined
+    SpecificationDefined --> CandidateEvaluation : specificationsDefined
+    CandidateEvaluation --> SampleRequested : candidatesEvaluated
+    SampleRequested --> Qualification : samplesReceived
+    Qualification --> CandidateEvaluation : qualificationFailed
+    Qualification --> SupplierCertification : qualificationCompleted
+    SupplierCertification --> Approved : supplierCertified
+    Approved --> ContractNegotiation : materialApproved
+    ContractNegotiation --> [*] : termsNegotiated
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,8 +117,10 @@ graph TD
     D --> E{Passed?}
     E -->|Yes| F[certifySupplier]
     E -->|No| B
-    F --> G[approveMaterial]
-    G --> H[negotiateTerms]
+    F --> G{Certification Approved?}
+    G -->|Yes| H[approveMaterial]
+    G -->|No| B
+    H --> I[negotiateTerms]
 ```
 
 ## Actor Relationships

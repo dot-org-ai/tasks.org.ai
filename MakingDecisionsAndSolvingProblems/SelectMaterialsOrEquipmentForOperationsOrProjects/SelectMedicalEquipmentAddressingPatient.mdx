@@ -81,6 +81,33 @@ Selecting medical equipment for patient needs involves evaluating clinical requi
 | getAuthorizationStatus | Check the approval status of submitted equipment requests |
 | getComplianceRecords | Look up regulatory certifications for specific equipment models |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    PatientAssessment ||--|{ ClinicalRequirement : "defines"
+    ClinicalRequirement ||--|{ EquipmentOption : "matched-by"
+    EquipmentOption ||--|| ComplianceCertification : "validated-by"
+    EquipmentOption ||--|| AuthorizationRequest : "authorized-via"
+    AuthorizationRequest }o--|| DeliveryOrder : "triggers"
+    PatientAssessment }o--|| DeliveryOrder : "fulfilled-by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Assessment
+    Assessment --> OptionsIdentified : patientAssessed
+    OptionsIdentified --> CompatibilityReview : optionsIdentified
+    CompatibilityReview --> ComplianceCheck : compatibilityEvaluated
+    ComplianceCheck --> AuthorizationPending : complianceVerified
+    AuthorizationPending --> Selected : authorizationApproved
+    AuthorizationPending --> OptionsIdentified : authorizationDenied
+    Selected --> Ordered : equipmentSelected
+    Ordered --> [*] : equipmentOrdered
+```
+
 ## Workflow
 
 ```mermaid
@@ -88,11 +115,13 @@ graph TD
     A[assessPatientNeeds] --> B[identifyEquipmentOptions]
     B --> C[evaluateCompatibility]
     C --> D[verifyCompliance]
-    D --> E[requestAuthorization]
-    E --> F{Authorized?}
-    F -->|Yes| G[selectEquipment]
-    F -->|No| B
-    G --> H[orderEquipment]
+    D --> E{Compliant?}
+    E -->|No| B
+    E -->|Yes| F[requestAuthorization]
+    F --> G{Authorized?}
+    G -->|Yes| H[selectEquipment]
+    G -->|No| B
+    H --> I[orderEquipment]
 ```
 
 ## Actor Relationships

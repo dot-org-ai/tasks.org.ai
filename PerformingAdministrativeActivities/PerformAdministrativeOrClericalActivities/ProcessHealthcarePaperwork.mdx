@@ -82,6 +82,35 @@ Processing healthcare paperwork involves managing the flow of administrative doc
 | findPendingPreauthorizations | Query outstanding preauthorization requests |
 | getRemittanceHistory | Look up payment and denial records by claim or payer |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    PatientIntakeForm ||--|| MedicalRecord : "populatesData"
+    MedicalRecord ||--|{ InsuranceClaim : "generatesClaimsFor"
+    InsuranceClaim ||--o| RemittanceAdvice : "respondedWith"
+    MedicalRecord ||--o{ ConsentForm : "authorizedBy"
+    InsuranceClaim ||--o| PreauthorizationRequest : "requiresApprovalVia"
+    RemittanceAdvice }o--|| InsuranceClaim : "adjudicates"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> IntakeProcessing
+    IntakeProcessing --> InsuranceCheck : intakeFormProcessed
+    InsuranceCheck --> PreAuth : insuranceVerified
+    InsuranceCheck --> PatientNotified : notCovered
+    PreAuth --> RecordUpdate : preauthorizationRequested
+    PreAuth --> PatientNotified : preAuthDenied
+    RecordUpdate --> ClaimSubmission : medicalRecordUpdated
+    ClaimSubmission --> RemittanceReview : claimSubmitted
+    RemittanceReview --> Archived : remittanceProcessed
+    RemittanceReview --> ClaimSubmission : claimDeniedAppeal
+    Archived --> [*] : documentationArchived
+```
+
 ## Workflow
 
 ```mermaid

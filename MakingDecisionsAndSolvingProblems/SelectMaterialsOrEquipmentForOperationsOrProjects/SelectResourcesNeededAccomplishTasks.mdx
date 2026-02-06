@@ -81,18 +81,48 @@ Selecting resources needed to accomplish tasks involves analyzing work requireme
 | getCostEstimates | Look up projected resource costs by task, project, or department |
 | getResourceUtilization | View current utilization rates for personnel and equipment |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TaskRequirement ||--|{ ResourceOption : "matched-by"
+    ResourceOption ||--|| AvailabilityRecord : "constrained-by"
+    TaskRequirement ||--|| AllocationPlan : "planned-in"
+    AllocationPlan ||--|{ ResourceRequest : "generates"
+    ResourceRequest }o--|| CostEstimate : "priced-in"
+    AllocationPlan }o--|| CostEstimate : "budgeted-by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RequirementsAnalysis
+    RequirementsAnalysis --> AvailabilityCheck : requirementsAnalyzed
+    AvailabilityCheck --> OptionEvaluation : availabilityChecked
+    OptionEvaluation --> Selection : optionsEvaluated
+    Selection --> PlanCreation : resourcesSelected
+    PlanCreation --> AwaitingApproval : allocationPlanCreated
+    AwaitingApproval --> OptionEvaluation : approvalDenied
+    AwaitingApproval --> Allocated : approvalGranted
+    Allocated --> [*] : resourcesAllocated
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[analyzeRequirements] --> B[checkAvailability]
-    B --> C[evaluateOptions]
-    C --> D[selectResources]
-    D --> E[createAllocationPlan]
-    E --> F[requestApproval]
-    F --> G{Approved?}
-    G -->|Yes| H[allocateResources]
-    G -->|No| C
+    B --> C{Resources Available?}
+    C -->|Yes| D[evaluateOptions]
+    C -->|No| E[Source Externally]
+    E --> D
+    D --> F[selectResources]
+    F --> G[createAllocationPlan]
+    G --> H[requestApproval]
+    H --> I{Approved?}
+    I -->|Yes| J[allocateResources]
+    I -->|No| D
 ```
 
 ## Actor Relationships

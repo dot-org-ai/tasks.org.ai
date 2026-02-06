@@ -81,6 +81,33 @@ Selecting tools, equipment, or technologies involves assessing operational or pr
 | getProofOfConceptResults | Look up trial outcomes by candidate or project |
 | getDeploymentPlans | Retrieve deployment schedules filtered by status or technology type |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    RequirementProfile ||--|{ ToolCandidate : "evaluated-against"
+    ToolCandidate ||--|| EvaluationMatrix : "scored-in"
+    ToolCandidate ||--o{ ProofOfConcept : "tested-in"
+    EvaluationMatrix ||--|| SelectionRecommendation : "produces"
+    SelectionRecommendation }o--|| DeploymentPlan : "enables"
+    ProofOfConcept }o--|| SelectionRecommendation : "validates"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RequirementsDefined
+    RequirementsDefined --> Researching : requirementsDefined
+    Researching --> Evaluation : candidatesResearched
+    Evaluation --> ProofOfConcept : evaluationMatrixCompleted
+    ProofOfConcept --> RecommendationReady : proofOfConceptCompleted
+    RecommendationReady --> AwaitingApproval : recommendationPrepared
+    AwaitingApproval --> Evaluation : selectionDenied
+    AwaitingApproval --> DeploymentPlanning : selectionApproved
+    DeploymentPlanning --> [*] : deploymentPlanned
+```
+
 ## Workflow
 
 ```mermaid
@@ -88,11 +115,13 @@ graph TD
     A[defineRequirements] --> B[researchCandidates]
     B --> C[buildEvaluationMatrix]
     C --> D[conductProofOfConcept]
-    D --> E[prepareRecommendation]
-    E --> F[approveSelection]
-    F --> G{Approved?}
-    G -->|Yes| H[planDeployment]
-    G -->|No| C
+    D --> E{POC Successful?}
+    E -->|Yes| F[prepareRecommendation]
+    E -->|No| C
+    F --> G[approveSelection]
+    G --> H{Approved?}
+    H -->|Yes| I[planDeployment]
+    H -->|No| C
 ```
 
 ## Actor Relationships

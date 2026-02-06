@@ -81,6 +81,35 @@ Conferring with organizational members to accomplish work activities involves en
 | getBlockedTasks | Find tasks waiting on unresolved dependencies |
 | getMilestoneStatus | Check progress against defined milestones for an initiative |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    WorkInitiative ||--|{ Deliverable : "produces"
+    WorkInitiative ||--|{ Responsibility : "divided into"
+    WorkInitiative ||--|{ ProgressMilestone : "measured by"
+    Deliverable ||--|| AcceptanceCriteria : "evaluated against"
+    Responsibility }o--|| DependencyLink : "blocked by"
+    DependencyLink }o--|{ Responsibility : "sequences"
+    ProgressMilestone }o--|| WorkInitiative : "checkpoints"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ObjectiveDefined
+    ObjectiveDefined --> ResponsibilityAssigned : responsibilityAssigned
+    ResponsibilityAssigned --> CheckInConducted : checkInConducted
+    CheckInConducted --> ProgressTracked : progressTracked
+    ProgressTracked --> DependencyResolved : dependencyResolved
+    DependencyResolved --> CheckInConducted : followUp
+    ProgressTracked --> DeliverableSubmitted : deliverableSubmitted
+    DeliverableSubmitted --> DeliverableApproved : deliverableApproved
+    DeliverableSubmitted --> CheckInConducted : revisionRequested
+    DeliverableApproved --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,7 +123,10 @@ graph TD
     F --> C
     G -->|No| C
     G -->|Yes| H[submitDeliverable]
-    H --> I[approveDeliverable]
+    H --> I{Meets Criteria?}
+    I -->|Yes| J[approveDeliverable]
+    I -->|No| K[Request Revision]
+    K --> C
 ```
 
 ## Actor Relationships

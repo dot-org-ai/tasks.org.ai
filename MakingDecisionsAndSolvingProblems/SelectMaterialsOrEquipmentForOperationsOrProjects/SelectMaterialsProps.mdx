@@ -78,6 +78,32 @@ Selecting materials and props involves identifying the specific physical items, 
 | getSourceOptions | Retrieve vendor and rental options filtered by material type and budget |
 | getSelectionHistory | Look up past material selections for reference or reuse |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MaterialRequirement ||--|{ SourceOption : "sourced-from"
+    MaterialRequirement ||--|{ PropItem : "specifies"
+    PropItem }o--|| SourceOption : "available-from"
+    PropItem ||--|| SelectionApproval : "authorized-by"
+    SelectionApproval }o--|| BudgetAllocation : "funded-by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RequirementsDefined
+    RequirementsDefined --> SourcesEvaluated : requirementsDefined
+    SourcesEvaluated --> SamplesReviewed : sourcesEvaluated
+    SamplesReviewed --> Selected : samplesReceived
+    Selected --> AwaitingApproval : materialsSelected
+    AwaitingApproval --> Selected : notApproved
+    AwaitingApproval --> Ordered : selectionApproved
+    Ordered --> Received : orderPlaced
+    Received --> [*] : materialsReceived
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,7 +115,10 @@ graph TD
     E --> F{Approved?}
     F -->|Yes| G[placeOrder]
     F -->|No| D
-    G --> H[materialsReceived]
+    G --> H{Materials Received?}
+    H -->|No| I[Follow Up with Vendor]
+    I --> H
+    H -->|Yes| J[Inspect and Accept]
 ```
 
 ## Actor Relationships

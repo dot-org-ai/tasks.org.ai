@@ -81,6 +81,36 @@ Serving court-ordered documents involves receiving legal documents from the cour
 | findPendingService | Locate service orders awaiting initial or further attempts |
 | getProofOfService | Retrieve filed proof of service documents by case or order |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ServiceOrder ||--|{ CourtDocument : "contains"
+    ServiceOrder ||--|{ ServiceAttempt : "trackedThrough"
+    ServiceOrder ||--|| ProofOfService : "provedBy"
+    ServiceOrder ||--|| ServiceMethod : "deliveredVia"
+    ServiceOrder ||--|| CaseRecord : "linkedTo"
+    ServiceAttempt }o--|| ProofOfService : "culminatesIn"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Received
+    Received --> Locating : serviceOrderReceived
+    Locating --> AttemptingService : namedPartyLocated
+    Locating --> Escalated : partyNotFound
+    AttemptingService --> Served : serviceCompleted
+    AttemptingService --> RetryRequired : serviceAttempted
+    RetryRequired --> AttemptingService : additionalAttempt
+    RetryRequired --> Escalated : maxAttemptsReached
+    Escalated --> AttemptingService : alternativeMethodApproved
+    Served --> ProofFiled : proofOfServiceFiled
+    ProofFiled --> Closed : serviceOrderClosed
+    Closed --> [*]
+```
+
 ## Workflow
 
 ```mermaid

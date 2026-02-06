@@ -85,6 +85,35 @@ IT performance metric and standard development involves defining service level i
 | listDashboards | Enumerate available monitoring dashboards |
 | getPerformanceReports | Retrieve periodic metric summaries |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    PerformanceMetric ||--|| ServiceLevelObjective : targetedBy
+    PerformanceMetric ||--|| Baseline : referencedBy
+    ServiceLevelObjective ||--|| ErrorBudget : constrainedBy
+    Dashboard ||--|{ PerformanceMetric : displays
+    AlertRule }o--|| ServiceLevelObjective : monitors
+    PerformanceReport }o--|{ PerformanceMetric : summarizes
+    Standard }o--|{ ServiceLevelObjective : documents
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> MetricsIdentified
+    MetricsIdentified --> Baselined : metricsIdentified
+    Baselined --> SLOsSet : baselineEstablished
+    SLOsSet --> BudgetDefined : slosSet
+    BudgetDefined --> DashboardReady : errorBudgetDefined
+    DashboardReady --> AlertsActive : dashboardCreated
+    AlertsActive --> SLOsSet : standards revision needed
+    AlertsActive --> Published : standardPublished
+    Published --> MetricsIdentified : next review cycle
+    Published --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -95,8 +124,10 @@ graph TD
     D --> E[createDashboard]
     E --> F[configureAlerts]
     F --> G{Standards Review}
-    G -->|Revise| C
-    G -->|Approve| H[publishStandard]
+    G -->|Revise| H{SLO or Budget Issue?}
+    H -->|SLO| C
+    H -->|Budget| D
+    G -->|Approve| I[publishStandard]
 ```
 
 ## Actor Relationships

@@ -81,6 +81,33 @@ Guiding class discussions involves preparing discussion topics aligned with lear
 | getSessionSummaries | Look up discussion summaries by date, course, or topic |
 | findLowEngagement | Identify students with below-threshold participation across sessions |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    DiscussionPlan ||--|{ DiscussionPrompt : contains
+    DiscussionPlan ||--|{ LearningOutcome : targets
+    DiscussionSession ||--|| DiscussionPlan : follows
+    DiscussionSession ||--|{ ParticipationRecord : generates
+    SessionSummary }o--|| DiscussionSession : documents
+    ParticipationRecord }o--|| LearningOutcome : measuresAgainst
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> PlanPrepared
+    PlanPrepared --> Scheduled : discussionPlanPrepared
+    Scheduled --> InProgress : discussionSessionScheduled
+    InProgress --> Monitored : discussionFacilitated
+    Monitored --> Summarized : participationMonitored
+    Summarized --> Assessed : discussionSummarized
+    Assessed --> PlanPrepared : objectives not met
+    Assessed --> FeedbackDelivered : discussionOutcomesAssessed
+    FeedbackDelivered --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -88,13 +115,15 @@ graph TD
     A[prepareDiscussionPlan] --> B[scheduleDiscussionSession]
     B --> C[facilitateDiscussion]
     C --> D[monitorParticipation]
-    D --> E[summarizeDiscussion]
-    E --> F[assessDiscussionOutcomes]
-    F --> G{Objectives Met?}
-    G -->|Yes| H[provideParticipationFeedback]
-    G -->|No| I[Revise Discussion Plan]
-    I --> A
-    H --> J[End]
+    D --> E{Engagement Adequate?}
+    E -->|No| F[Adjust Facilitation Approach]
+    F --> C
+    E -->|Yes| G[summarizeDiscussion]
+    G --> H[assessDiscussionOutcomes]
+    H --> I{Objectives Met?}
+    I -->|No| J[Revise Discussion Plan]
+    J --> A
+    I -->|Yes| K[provideParticipationFeedback]
 ```
 
 ## Actor Relationships

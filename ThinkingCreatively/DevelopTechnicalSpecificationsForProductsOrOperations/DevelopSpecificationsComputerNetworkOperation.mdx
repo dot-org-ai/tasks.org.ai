@@ -84,6 +84,33 @@ Computer network operation specifications define the topology, protocol standard
 | getVLANDefinitions | Look up VLAN configurations by network |
 | findFailoverConfigs | Locate redundancy settings for critical segments |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    NetworkSpec ||--|| TopologyDiagram : defines
+    NetworkSpec ||--|{ VLANDefinition : segments
+    NetworkSpec ||--|{ BandwidthAllocation : allocates
+    NetworkSpec ||--|{ SecurityPolicy : enforces
+    NetworkSpec ||--|| FailoverConfig : protectedBy
+    MonitoringProfile }o--|| NetworkSpec : monitors
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> TopologyDefined
+    TopologyDefined --> VLANsConfigured : topologyDefined
+    VLANsConfigured --> BandwidthAllocated : vlansConfigured
+    BandwidthAllocated --> SecuritySet : bandwidthAllocated
+    SecuritySet --> FailoverDefined : securityPoliciesSet
+    FailoverDefined --> MonitoringReady : failoverDefined
+    MonitoringReady --> TopologyDefined : review revisions
+    MonitoringReady --> Published : networkSpecPublished
+    Published --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,8 +121,10 @@ graph TD
     D --> E[defineFailover]
     E --> F[createMonitoringProfile]
     F --> G{Review Complete?}
-    G -->|No| A
-    G -->|Yes| H[publishNetworkSpec]
+    G -->|No| H{Topology or Security Issue?}
+    H -->|Topology| A
+    H -->|Security| D
+    G -->|Yes| I[publishNetworkSpec]
 ```
 
 ## Actor Relationships
