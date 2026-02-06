@@ -82,6 +82,35 @@ Traffic signal monitoring involves real-time observation of signal operations, t
 | getTimingPlans | Find signal timing configurations by intersection |
 | getMaintenanceTickets | List repair requests by signal or priority |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TrafficSignal ||--o{ SignalPhase : contains
+    TrafficSignal ||--|| TimingPlan : "configured by"
+    TrafficSignal ||--o{ StatusUpdate : produces
+    StatusUpdate ||--o{ Malfunction : "may indicate"
+    Malfunction ||--|{ MaintenanceTicket : generates
+    TimingPlan ||--o{ SignalPhase : defines
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Monitoring : statusMonitored
+    Monitoring --> Verified : timingVerified
+    Monitoring --> Malfunctioning : malfunctionDetected
+    Malfunctioning --> Dispatched : maintenanceDispatched
+    Dispatched --> Monitoring : statusMonitored
+    Verified --> Adjusted : sequenceAdjusted
+    Verified --> Analyzed : performanceAnalyzed
+    Adjusted --> Analyzed : performanceAnalyzed
+    Analyzed --> Reported : statusReportGenerated
+    Reported --> Monitoring : statusMonitored
+    Reported --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,11 +119,11 @@ graph TD
     B -->|Yes| C[verifyTiming]
     B -->|No| D[detectMalfunction]
     D --> E[dispatchMaintenance]
+    E --> A
     C --> F{Timing OK?}
     F -->|No| G[adjustSequence]
     F -->|Yes| H[analyzePerformance]
     G --> H
-    E --> H
     H --> I[generateStatusReport]
 ```
 

@@ -81,6 +81,34 @@ Approving expenditures involves evaluating spending requests against budgets, po
 | getSpendingByCategory | Aggregate approved expenditures by category or cost center |
 | getApprovalHistory | Retrieve the approval chain and timeline for a specific request |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ExpenditureRequest ||--|| BudgetAllocation : "charged to"
+    ExpenditureRequest ||--|| ApprovalRecord : "decided in"
+    ExpenditureRequest ||--o| PurchaseOrder : generates
+    PurchaseOrder ||--|| DisbursementRecord : "paid via"
+    SpendingPolicy }o--|| ExpenditureRequest : governs
+    ApprovalRecord }o--|| SpendingPolicy : "validated against"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Submitted : requestSubmitted
+    Submitted --> Validated : budgetValidated
+    Validated --> Routed : approvalRouted
+    Routed --> Approved : expenditureApproved
+    Routed --> Rejected : expenditureRejected
+    Approved --> Paid : paymentProcessed
+    Rejected --> Submitted : requestSubmitted
+    Validated --> Flagged : policyViolationDetected
+    Flagged --> Rejected : expenditureRejected
+    Paid --> [*]
+```
+
 ## Workflow
 
 ```mermaid

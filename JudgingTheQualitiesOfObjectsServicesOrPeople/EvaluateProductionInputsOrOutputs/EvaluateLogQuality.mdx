@@ -82,6 +82,33 @@ Log quality evaluation involves inspecting harvested timber for species identifi
 | getDefectPatterns | Identify common quality issues by source |
 | getLogValuation | Retrieve pricing data by grade and species |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    LogInspection ||--|| SpeciesIdentification : identifies
+    LogInspection ||--o{ LogMeasurement : records
+    LogInspection ||--o{ DefectRecord : documents
+    LogMeasurement }o--|| QualityGrade : "determines"
+    DefectRecord }o--|| QualityGrade : influences
+    QualityGrade ||--|| PricingAssessment : drives
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Identified : logSpeciesIdentified
+    Identified --> Measured : logDimensionsMeasured
+    Measured --> Inspected : logDefectsInspected
+    Inspected --> SoundnessChecked : logSoundnessAssessed
+    SoundnessChecked --> Graded : qualityGradeAssigned
+    Graded --> Valued : logValueCalculated
+    Valued --> Documented : inspectionResultsDocumented
+    Graded --> Inspected : logDefectsInspected
+    Documented --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,9 +116,15 @@ graph TD
     A[identifyLogSpecies] --> B[measureLogDimensions]
     B --> C[inspectLogDefects]
     C --> D[assessLogSoundness]
-    D --> E[assignQualityGrade]
-    E --> F[calculateLogValue]
-    F --> G[documentInspectionResults]
+    D --> E{Sound Enough?}
+    E -->|No| F[Cull Log]
+    E -->|Yes| G[assignQualityGrade]
+    G --> H[calculateLogValue]
+    H --> I[documentInspectionResults]
+    F --> I
+    I --> J{More Logs in Lot?}
+    J -->|Yes| A
+    J -->|No| K[Complete]
 ```
 
 ## Actor Relationships

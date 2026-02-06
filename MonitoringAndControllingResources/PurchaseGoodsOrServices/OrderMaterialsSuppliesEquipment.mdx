@@ -82,6 +82,33 @@ Ordering materials, supplies, and equipment involves identifying needs, obtainin
 | getOrders | Retrieve purchase orders by vendor or status |
 | getInventory | Check current stock levels and reorder needs |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Requisition ||--o{ Item : contains
+    Requisition ||--|| Approval : "requires"
+    Requisition ||--|| PurchaseOrder : "converts to"
+    PurchaseOrder }o--|| Invoice : "billed by"
+    PurchaseOrder ||--o{ Shipment : "fulfilled via"
+    Shipment }o--|| PurchaseOrder : delivers
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Created
+    Created --> Submitted : approvalSubmitted
+    Submitted --> Approved : purchaseApproved
+    Submitted --> Revised : approvalSubmitted
+    Revised --> Submitted : approvalSubmitted
+    Approved --> Ordered : purchaseOrderPlaced
+    Ordered --> InTransit : deliveryTracked
+    InTransit --> Received : goodsReceived
+    Received --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,10 +116,14 @@ graph TD
     A[createRequisition] --> B[submitApproval]
     B --> C{Approved?}
     C -->|Yes| D[selectVendor]
-    C -->|Denied| E[Revise/Cancel]
+    C -->|Denied| E[Revise Requisition]
+    E --> B
     D --> F[placePurchaseOrder]
     F --> G[trackDelivery]
     G --> H[receiveGoods]
+    H --> I{Items Correct?}
+    I -->|Yes| J[Complete]
+    I -->|No| F
 ```
 
 ## Actor Relationships

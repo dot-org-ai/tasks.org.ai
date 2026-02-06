@@ -81,6 +81,35 @@ Patrolling natural areas involves traversing designated territories on foot, by 
 | getHazardReports | Query reported hazards filtered by severity, area, or resolution status |
 | findPermitActivity | Locate active permits and associated holder information for a given area |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    PatrolRoute ||--o{ PatrolLog : produces
+    PatrolLog ||--o{ Violation : documents
+    PatrolLog ||--o{ IncidentReport : generates
+    PatrolRoute ||--o{ HazardReport : reveals
+    Permit }o--|| Violation : "checked against"
+    HazardReport }o--|| PatrolLog : "recorded in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Patrolling : patrolInitiated
+    Patrolling --> Assessing : trailConditionAssessed
+    Assessing --> HazardLogged : hazardReported
+    Assessing --> Observing : observationLogged
+    HazardLogged --> Observing : observationLogged
+    Observing --> Citing : violationIssued
+    Observing --> Responding : emergencyResponded
+    Citing --> Patrolling : patrolCompleted
+    Responding --> Patrolling : patrolCompleted
+    Observing --> Completed : patrolCompleted
+    Completed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -95,8 +124,10 @@ graph TD
     F -->|No| H{Emergency?}
     G --> H
     H -->|Yes| I[respondToEmergency]
-    H -->|No| J[Complete Patrol]
+    H -->|No| J{More Trail Segments?}
     I --> J
+    J -->|Yes| B
+    J -->|No| K[Complete Patrol]
 ```
 
 ## Actor Relationships

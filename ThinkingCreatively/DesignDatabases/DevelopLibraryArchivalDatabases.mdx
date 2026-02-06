@@ -85,6 +85,34 @@ Library and archival database development covers the design of cataloging system
 | findAuthorityRecords | Search standardized name and subject headings |
 | listDigitalAssets | Browse digitized items by collection or format |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    CatalogRecord ||--o{ DigitalAsset : digitizes
+    CatalogRecord ||--o{ AuthorityRecord : linked_to
+    CatalogRecord }o--|| MetadataSchema : conforms_to
+    ArchivalCollection ||--o{ CatalogRecord : contains
+    ArchivalCollection ||--|| FindingAid : described_by
+    CatalogRecord ||--o{ CirculationRecord : tracks
+    CatalogRecord ||--|| HoldingsRecord : located_by
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> SchemaReady
+    SchemaReady --> Migrated : recordsMigrated
+    Migrated --> Cataloged : catalogRecordAdded
+    Cataloged --> Linked : authorityRecordLinked
+    Linked --> Digitized : digitalAssetIngested
+    Digitized --> Published : findingAidPublished
+    Published --> Searchable : searchIndexRebuilt
+    Searchable --> Cataloged : catalogRecordAdded
+    Searchable --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,10 +120,14 @@ graph TD
     A[defineMetadataSchema] --> B[migrateRecords]
     B --> C[createCatalogRecord]
     C --> D[linkAuthorityRecord]
-    D --> E[ingestDigitalAsset]
-    E --> F[buildFindingAid]
-    F --> G[configureSearch]
-    G --> H[searchIndexRebuilt]
+    D --> E{Digital asset available?}
+    E -->|Yes| F[ingestDigitalAsset]
+    E -->|No| G[buildFindingAid]
+    F --> G
+    G --> H[configureSearch]
+    H --> I{More records to catalog?}
+    I -->|Yes| C
+    I -->|No| J[searchIndexRebuilt]
 ```
 
 ## Actor Relationships

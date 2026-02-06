@@ -82,6 +82,34 @@ Healthcare system navigation involves educating patients on care processes, coor
 | getAppointments | Retrieve scheduled services by patient |
 | getAuthorizations | Access insurance approval status |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    PatientInquiry ||--|| NavigationPlan : "answered by"
+    NavigationPlan ||--o{ Referral : "may include"
+    NavigationPlan ||--o{ AppointmentCoordination : schedules
+    Referral ||--o{ InsuranceAuthorization : requires
+    AppointmentCoordination ||--o{ InsuranceAuthorization : "verified by"
+    NavigationPlan ||--|| ContinuityPlan : "extends to"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Received : inquiryReceived
+    Received --> Educated : processExplained
+    Educated --> Referred : referralFacilitated
+    Educated --> Scheduled : appointmentsCoordinated
+    Referred --> InsuranceChecked : insuranceVerified
+    Scheduled --> InsuranceChecked : insuranceVerified
+    InsuranceChecked --> Resourced : resourcesProvided
+    Resourced --> FollowedUp : progressFollowedUp
+    FollowedUp --> Received : inquiryReceived
+    FollowedUp --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,8 +120,11 @@ graph TD
     C -->|No| E[coordinateAppointments]
     D --> F[verifyInsurance]
     E --> F
-    F --> G[provideResources]
-    G --> H[followUpProgress]
+    F --> G{Authorized?}
+    G -->|Yes| H[provideResources]
+    G -->|No| I[Resubmit Authorization]
+    I --> F
+    H --> J[followUpProgress]
 ```
 
 ## Actor Relationships

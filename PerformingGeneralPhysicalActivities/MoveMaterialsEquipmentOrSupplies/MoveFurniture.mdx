@@ -80,6 +80,34 @@ Furniture moving involves the disassembly, wrapping, loading, transporting, unlo
 | getDamageAssessments | Look up damage reports for a move or specific item |
 | getCrewSchedule | View crew assignments and availability by date |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MoveOrder ||--o{ FurnitureItem : includes
+    MoveOrder ||--|| FloorPlan : references
+    FurnitureItem ||--o{ PackingMaterial : "protected by"
+    FurnitureItem ||--o{ DamageAssessment : "may have"
+    MoveOrder ||--o{ DamageAssessment : documents
+    FloorPlan ||--o{ FurnitureItem : positions
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Surveyed
+    Surveyed --> Disassembled : inventorySurveyed
+    Disassembled --> Packed : furniturePacked
+    Packed --> Loaded : furnitureLoaded
+    Loaded --> InTransit : furnitureTransported
+    InTransit --> Unloaded : furnitureUnloaded
+    Unloaded --> Placed : furniturePlaced
+    Placed --> Damaged : damageAssessment
+    Damaged --> Packed : Re-pack for repair
+    Placed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,6 +120,9 @@ graph TD
     F --> G[placeFurniture]
     G --> H{Damage found?}
     H -->|Yes| I[File DamageAssessment]
+    I --> K{Repairable on-site?}
+    K -->|Yes| G
+    K -->|No| L[Schedule Replacement]
     H -->|No| J[Complete]
 ```
 

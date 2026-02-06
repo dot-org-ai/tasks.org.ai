@@ -81,6 +81,34 @@ Operating firefighting equipment encompasses the selection, deployment, and use 
 | getIncidentDeployments | Query equipment deployment history for a given incident |
 | findMaintenanceDue | Locate equipment approaching scheduled inspection or service dates |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Apparatus ||--|| Pump : carries
+    Apparatus ||--o{ HoseLine : deploys
+    Apparatus ||--o| AerialDevice : mounts
+    Apparatus ||--o{ Extinguisher : stores
+    Pump ||--o{ HoseLine : pressurizes
+    BreathingApparatus }o--|| Apparatus : carried
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Deployed : apparatusDeployed
+    Deployed --> Pumping : pumpEngaged
+    Pumping --> Advancing : hoseLineAdvanced
+    Advancing --> SCBAActive : breathingApparatusActivated
+    SCBAActive --> AerialUp : aerialDeviceOperated
+    Advancing --> ExtinguisherUsed : extinguisherDischarged
+    AerialUp --> Shutdown : equipmentShutdown
+    ExtinguisherUsed --> Shutdown : equipmentShutdown
+    Shutdown --> Deployed : next incident
+    Shutdown --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,8 +119,10 @@ graph TD
     D --> E{Interior Attack?}
     E -->|Yes| F[operateAerialDevice]
     E -->|No| G[dischargeExtinguisher]
-    F --> H[shutdownEquipment]
+    F --> H{Fire Controlled?}
     G --> H
+    H -->|No| C
+    H -->|Yes| I[shutdownEquipment]
 ```
 
 ## Actor Relationships

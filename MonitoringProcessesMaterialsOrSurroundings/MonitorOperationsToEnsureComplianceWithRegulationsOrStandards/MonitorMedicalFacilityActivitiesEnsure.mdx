@@ -81,6 +81,33 @@ Medical facility compliance monitoring involves the systematic oversight of clin
 | getCredentialingStatus | Look up medical staff credentialing records by status or expiration date |
 | findAdverseEvents | Search adverse event reports by type, department, or severity |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ComplianceAudit ||--o{ QualityIndicator : measures
+    ComplianceAudit ||--o{ AdverseEvent : uncovers
+    AdverseEvent ||--|{ PolicyManual : violates
+    CredentialingRecord }o--|| PolicyManual : "governed by"
+    AccreditationSurvey ||--o{ ComplianceAudit : reviews
+    PolicyManual ||--o{ QualityIndicator : defines
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> PolicyReview : policyUpdated
+    PolicyReview --> Auditing : auditCompleted
+    Auditing --> Monitoring : indicatorThresholdBreached
+    Monitoring --> Investigating : adverseEventReported
+    Investigating --> Remediating : correctiveActionImplemented
+    Remediating --> Auditing : auditCompleted
+    Monitoring --> SurveyReady : credentialsVerified
+    SurveyReady --> Surveyed : surveyScheduled
+    Surveyed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,8 +117,8 @@ graph TD
     C --> D{Standards Met?}
     D -->|No| E[reportAdverseEvent]
     E --> F[implementCorrectiveAction]
+    F -->|Re-audit| B
     D -->|Yes| G[verifyCredentials]
-    F --> G
     G --> H[prepareForSurvey]
     H --> I[AccreditationSurvey]
 ```

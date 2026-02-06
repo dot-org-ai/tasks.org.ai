@@ -82,6 +82,33 @@ Network technical support encompasses incident triage, diagnostics, resolution, 
 | getResolutions | Retrieve solutions for similar issues |
 | getMetrics | Analyze support performance and resolution times |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SupportTicket ||--|| NetworkIssue : documents
+    NetworkIssue ||--o{ DiagnosticResult : "analyzed by"
+    NetworkIssue ||--o{ Resolution : "fixed by"
+    SupportTicket ||--o{ Escalation : "may trigger"
+    Resolution ||--o{ KnowledgeArticle : "captured in"
+    Escalation ||--o{ Resolution : produces
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Received : ticketReceived
+    Received --> Diagnosed : issueDiagnosed
+    Diagnosed --> Tested : connectivityTested
+    Tested --> Fixed : fixImplemented
+    Tested --> Escalated : ticketEscalated
+    Escalated --> Fixed : fixImplemented
+    Fixed --> Documented : resolutionDocumented
+    Documented --> Closed : ticketClosed
+    Closed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,9 +118,11 @@ graph TD
     C --> D{Can Resolve?}
     D -->|Yes| E[implementFix]
     D -->|No| F[escalateTicket]
-    E --> G[documentResolution]
-    F --> G
-    G --> H[closeTicket]
+    F --> E
+    E --> G{Fix Verified?}
+    G -->|Yes| H[documentResolution]
+    G -->|No| B
+    H --> I[closeTicket]
 ```
 
 ## Actor Relationships

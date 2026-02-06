@@ -82,6 +82,33 @@ Software technical support encompasses troubleshooting application issues, coord
 | getPatches | Retrieve available software updates |
 | getWorkarounds | Find temporary solutions for known issues |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SupportCase ||--o{ BugReport : documents
+    BugReport ||--o{ Patch : "fixed by"
+    BugReport ||--o{ Workaround : "bypassed by"
+    Patch ||--o{ ReleaseNote : "described in"
+    SupportCase ||--o{ UserGuide : "may update"
+    Workaround ||--o{ UserGuide : "documented in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Created : caseCreated
+    Created --> Reproduced : bugReproduced
+    Reproduced --> WorkedAround : workaroundProvided
+    Reproduced --> DocumentedOnly : documentationUpdated
+    WorkedAround --> Escalated : escalatedToDevelopment
+    Escalated --> Patched : patchApplied
+    Patched --> Published : releaseNotesPublished
+    Published --> Created : caseCreated
+    Published --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,7 +119,10 @@ graph TD
     C -->|No| E[updateDocumentation]
     D --> F[escalateToDevelopment]
     F --> G[applyPatch]
-    G --> H[publishReleaseNotes]
+    G --> H{Patch Verified?}
+    H -->|Yes| I[publishReleaseNotes]
+    H -->|No| F
+    I --> J[updateDocumentation]
 ```
 
 ## Actor Relationships

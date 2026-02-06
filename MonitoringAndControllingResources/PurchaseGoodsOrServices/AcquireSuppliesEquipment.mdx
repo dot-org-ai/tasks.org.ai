@@ -82,6 +82,33 @@ Acquiring supplies and equipment involves identifying needs, evaluating vendors,
 | getContracts | Retrieve active agreements and pricing |
 | getOrders | Find purchase orders by vendor or date |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Requisition ||--o{ Item : contains
+    Requisition ||--|| PurchaseOrder : "converts to"
+    PurchaseOrder }o--|| Vendor : "placed with"
+    Vendor ||--o{ Contract : governs
+    PurchaseOrder ||--o{ Receipt : fulfilled
+    Contract }o--|| Vendor : "negotiated with"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Requested
+    Requested --> Evaluating : vendorsEvaluated
+    Evaluating --> VendorChosen : vendorSelected
+    VendorChosen --> Negotiating : contractNegotiated
+    Negotiating --> Ordered : purchaseOrderIssued
+    Negotiating --> Evaluating : vendorsEvaluated
+    Ordered --> InTransit : shipmentTracked
+    InTransit --> Received : itemsReceived
+    Received --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,9 +116,14 @@ graph TD
     A[createRequisition] --> B[evaluateVendors]
     B --> C[selectVendor]
     C --> D[negotiateContract]
-    D --> E[issuePurchaseOrder]
-    E --> F[trackShipment]
-    F --> G[receiveItems]
+    D --> E{Terms Acceptable?}
+    E -->|Yes| F[issuePurchaseOrder]
+    E -->|No| B
+    F --> G[trackShipment]
+    G --> H[receiveItems]
+    H --> I{Items Correct?}
+    I -->|Yes| J[Complete]
+    I -->|No| F
 ```
 
 ## Actor Relationships

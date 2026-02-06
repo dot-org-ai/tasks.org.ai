@@ -81,6 +81,34 @@ Work environment monitoring involves inspecting physical conditions, equipment s
 | getInspectionResults | List completed inspections by area, date, or compliance outcome |
 | findOverdueCorrectiveActions | Locate corrective actions that have passed their remediation deadline |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SafetyInspection ||--o{ EnvironmentalReading : captures
+    SafetyInspection ||--o{ HazardFinding : discovers
+    HazardFinding ||--|{ CorrectiveAction : "resolved by"
+    ComplianceStandard ||--o{ SafetyInspection : governs
+    PPERequirement }o--|| ComplianceStandard : "defined by"
+    CorrectiveAction }o--|| HazardFinding : addresses
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Inspecting : inspectionCompleted
+    Inspecting --> Measuring : environmentalReadingCaptured
+    Measuring --> Compliant : complianceVerified
+    Measuring --> HazardFound : hazardIdentified
+    HazardFound --> Correcting : correctiveActionIssued
+    Correcting --> Resolved : hazardResolved
+    Resolved --> Inspecting : inspectionCompleted
+    Measuring --> Deviated : specificationDeviationDetected
+    Deviated --> HazardFound : hazardIdentified
+    Compliant --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,9 +119,11 @@ graph TD
     C -->|No| E[identifyHazard]
     E --> F[issueCorrectiveAction]
     F --> G[Remediate]
-    G --> H[closeHazardFinding]
-    D --> I[inspectionCompleted]
-    H --> I
+    G --> H{Hazard Resolved?}
+    H -->|Yes| I[closeHazardFinding]
+    H -->|No| A
+    D --> J[inspectionCompleted]
+    I --> J
 ```
 
 ## Actor Relationships

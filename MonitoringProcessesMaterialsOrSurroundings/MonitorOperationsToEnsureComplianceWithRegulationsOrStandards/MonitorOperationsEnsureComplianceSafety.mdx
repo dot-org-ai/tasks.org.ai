@@ -82,6 +82,35 @@ Safety and security compliance monitoring involves systematically observing work
 | getIncidents | Find incidents by type, date range, or investigation status |
 | getTrainingStatus | Retrieve employee safety training completion records |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SafetyInspection ||--o{ Hazard : identifies
+    Hazard ||--o{ Incident : "may cause"
+    Incident ||--|{ CorrectiveMeasure : "resolved by"
+    Hazard ||--o{ CorrectiveMeasure : "mitigated by"
+    SafetyPolicy ||--o{ SafetyInspection : governs
+    TrainingRecord }o--|| SafetyPolicy : "fulfills requirements of"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Inspecting : safetyInspectionCompleted
+    Inspecting --> HazardFound : hazardIdentified
+    Inspecting --> Compliant : safetyComplianceVerified
+    HazardFound --> Investigating : incidentReported
+    Investigating --> Investigated : incidentInvestigated
+    Investigated --> Remediating : correctiveMeasureAssigned
+    HazardFound --> Remediating : correctiveMeasureAssigned
+    Remediating --> Verified : safetyComplianceVerified
+    Verified --> Inspecting : safetyInspectionCompleted
+    Verified --> PlanUpdated : emergencyPlanUpdated
+    PlanUpdated --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -96,7 +125,9 @@ graph TD
     G --> H
     H --> I[Implement Measures]
     I --> J[verifySafetyCompliance]
-    J --> K[updateEmergencyPlan]
+    J --> K{Compliance Restored?}
+    K -->|Yes| L[updateEmergencyPlan]
+    K -->|No| A
 ```
 
 ## Actor Relationships

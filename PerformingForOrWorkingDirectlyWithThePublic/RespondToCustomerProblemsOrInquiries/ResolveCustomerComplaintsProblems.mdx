@@ -83,6 +83,36 @@ Customer complaint resolution involves diagnosing the root cause of a problem, i
 | getPatterns | View recurring complaint types and frequency |
 | getConfirmations | Find resolution confirmations by satisfaction status |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ComplaintCase ||--|| Diagnosis : identifiedBy
+    ComplaintCase ||--|| Remedy : resolvedWith
+    Remedy ||--o| ReturnAuthorization : initiates
+    Remedy ||--o| Refund : issues
+    ComplaintCase ||--|| ResolutionConfirmation : confirmedBy
+    ComplaintCase }o--|| PatternAnalysis : contributesTo
+    Diagnosis ||--|| Remedy : determines
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Diagnosed : issueDiagnosed
+    Diagnosed --> RemedySet : remedyDetermined
+    RemedySet --> ReturnStarted : returnInitiated
+    RemedySet --> Refunded : refundProcessed
+    RemedySet --> Fixed : fixImplemented
+    ReturnStarted --> Confirmed : resolutionConfirmed
+    Refunded --> Confirmed : resolutionConfirmed
+    Fixed --> Confirmed : resolutionConfirmed
+    Confirmed --> Diagnosed : re-diagnose if unresolved
+    Confirmed --> Analyzed : patternsAnalyzed
+    Analyzed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -96,7 +126,9 @@ graph TD
     D --> H[confirmResolution]
     F --> H
     G --> H
-    H --> I[analyzePatterns]
+    H --> I{Resolved?}
+    I -->|Yes| J[analyzePatterns]
+    I -->|No| A
 ```
 
 ## Actor Relationships

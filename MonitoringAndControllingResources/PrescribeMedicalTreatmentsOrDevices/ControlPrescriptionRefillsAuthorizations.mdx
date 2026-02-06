@@ -82,6 +82,35 @@ Controlling prescription refills involves processing patient renewal requests, m
 | getHistory | View previous refill dates and dispensed quantities |
 | getExpiringPrescriptions | Find prescriptions nearing refill limit |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Prescription ||--o{ RefillRequest : receives
+    Prescription ||--o{ Authorization : requires
+    Prescription ||--o{ RefillHistory : tracks
+    Prescription ||--o{ ExpirationAlert : generates
+    RefillRequest }o--|| Authorization : "depends on"
+    Authorization ||--o{ Appeal : "may trigger"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Active
+    Active --> RefillRequested : refillProcessed
+    RefillRequested --> Approved : approveRefill
+    RefillRequested --> Denied : refillDenied
+    Denied --> AuthorizationPending : authorizationRequested
+    AuthorizationPending --> Approved : authorizationApproved
+    AuthorizationPending --> Denied : authorizationDenied
+    Approved --> Active : prescriptionExtended
+    Active --> Expiring : expirationWarning
+    Expiring --> Active : prescriptionExtended
+    Expiring --> [*]
+```
+
 ## Workflow
 
 ```mermaid

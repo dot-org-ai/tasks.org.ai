@@ -81,6 +81,35 @@ Monitoring activities affecting environmental quality involves tracking industri
 | getEmissionsTrends | Retrieve pollutant discharge data over time for a specific facility or parameter |
 | findUpcomingInspections | Look up scheduled inspections by facility, region, or date range |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    EnvironmentalPermit ||--o{ InspectionRecord : "evaluated in"
+    EnvironmentalPermit ||--o{ EmissionsReport : "reported under"
+    InspectionRecord ||--o{ ViolationNotice : "may produce"
+    ViolationNotice ||--|| CorrectiveActionPlan : requires
+    MonitoringSchedule ||--o{ InspectionRecord : schedules
+    CorrectiveActionPlan }o--|| ViolationNotice : resolves
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Permitted
+    Permitted --> Inspected : inspectionCompleted
+    Inspected --> Compliant : emissionsDataAnalyzed
+    Inspected --> ViolationFound : violationDetected
+    ViolationFound --> Notified : violationNoticeIssued
+    Notified --> Correcting : correctiveActionRequired
+    Correcting --> Resolved : complianceRestored
+    Correcting --> Escalated : violationDetected
+    Resolved --> Permitted : permitRenewed
+    Compliant --> Permitted : permitRenewed
+    Escalated --> Correcting : correctiveActionRequired
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,7 +123,10 @@ graph TD
     G --> H{Resolved?}
     H -->|Yes| I[complianceRestored]
     H -->|No| J[Escalate Enforcement]
+    J --> F
     D -->|No| K[updateMonitoringSchedule]
+    K --> B
+    I --> K
 ```
 
 ## Actor Relationships

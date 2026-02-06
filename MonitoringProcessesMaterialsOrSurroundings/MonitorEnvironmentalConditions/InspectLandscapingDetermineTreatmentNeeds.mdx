@@ -81,6 +81,35 @@ Landscaping inspection involves systematically evaluating turf, trees, shrubs, f
 | getPestHistory | Look up past pest and disease identifications for a property |
 | getSoilResults | Retrieve soil analysis results by property, zone, or date range |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    InspectionReport ||--o{ PestIdentification : documents
+    InspectionReport ||--o{ SoilSample : collects
+    InspectionReport ||--|| TreatmentPlan : generates
+    TreatmentPlan ||--o{ TreatmentApplication : schedules
+    PlantInventory ||--o{ InspectionReport : "assessed in"
+    SoilSample }o--|| InspectionReport : "collected during"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Inspecting
+    Inspecting --> Completed : inspectionCompleted
+    Completed --> PestFound : pestIdentified
+    Completed --> SoilPending : soilAnalyzed
+    PestFound --> Planning : treatmentPlanCreated
+    SoilPending --> Planning : treatmentPlanCreated
+    Planning --> Scheduled : treatmentScheduled
+    Scheduled --> Updated : plantInventoryUpdated
+    Updated --> Inspecting : inspectionCompleted
+    Completed --> IrrigationAlert : irrigationIssueDetected
+    IrrigationAlert --> Planning : treatmentPlanCreated
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,6 +123,9 @@ graph TD
     D --> F
     F --> H[scheduleTreatment]
     H --> I[updatePlantInventory]
+    I --> J{Re-inspection Needed?}
+    J -->|Yes| A
+    J -->|No| K[Complete]
 ```
 
 ## Actor Relationships

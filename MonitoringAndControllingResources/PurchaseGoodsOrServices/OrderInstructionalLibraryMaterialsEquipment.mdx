@@ -82,16 +82,47 @@ Ordering instructional and library materials involves evaluating educational nee
 | getSubscriptions | Retrieve active database and journal access |
 | getBudget | Check available funds by category or department |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MaterialOrder ||--o{ Resource : contains
+    Resource ||--o{ CatalogRecord : "cataloged as"
+    Subscription ||--o{ Resource : provides
+    Budget ||--o{ MaterialOrder : funds
+    Equipment ||--o{ CatalogRecord : "tracked by"
+    MaterialOrder }o--|| Budget : "charged to"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Selected
+    Selected --> Ordered : resourceOrdered
+    Ordered --> Tracked : orderTracked
+    Tracked --> Received : itemsReceived
+    Received --> Cataloged : resourceCataloged
+    Cataloged --> Active : accessActivated
+    Received --> Ordered : resourceOrdered
+    Active --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
-    A[selectMaterial] --> B[orderResource]
-    B --> C[trackOrder]
-    C --> D[receiveItems]
-    D --> E[catalogResource]
-    E --> F[activateAccess]
-    F --> G[Available for Use]
+    A[selectMaterial] --> B{Budget Available?}
+    B -->|Yes| C[orderResource]
+    B -->|No| D[Request Funds]
+    D --> A
+    C --> E[trackOrder]
+    E --> F[receiveItems]
+    F --> G{Items Correct?}
+    G -->|Yes| H[catalogResource]
+    G -->|No| C
+    H --> I[activateAccess]
+    I --> J[Available for Use]
 ```
 
 ## Actor Relationships

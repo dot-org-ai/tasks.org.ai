@@ -81,6 +81,34 @@ Monitoring access and flow of people involves tracking movement through entry po
 | getAccessDenials | List access denial events by reason, access point, or time period |
 | findRestrictedZoneActivity | Retrieve entry and exit records for high-security areas |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    AccessPoint ||--o{ Credential : validates
+    AccessPoint ||--o{ AccessLog : records
+    OccupancyCount }o--|| CapacityThreshold : "compared against"
+    RestrictedZone ||--|{ AccessPoint : "controlled by"
+    Credential }o--|| AccessLog : "referenced in"
+    RestrictedZone ||--o{ OccupancyCount : tracks
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Verifying : credentialVerified
+    Verifying --> Granted : accessGranted
+    Verifying --> Denied : accessDenied
+    Granted --> Monitoring : occupancyThresholdReached
+    Monitoring --> Restricted : entryRestricted
+    Restricted --> Redirected : flowRedirected
+    Redirected --> Verifying : credentialVerified
+    Denied --> Alert : unauthorizedEntryDetected
+    Alert --> [*]
+    Granted --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,9 +120,9 @@ graph TD
     E -->|Yes| F[restrictEntry]
     E -->|No| G[grantAccess]
     F --> H[redirectFlow]
+    H --> A
     G --> I[logAccessEvent]
     D --> I
-    H --> I
 ```
 
 ## Actor Relationships

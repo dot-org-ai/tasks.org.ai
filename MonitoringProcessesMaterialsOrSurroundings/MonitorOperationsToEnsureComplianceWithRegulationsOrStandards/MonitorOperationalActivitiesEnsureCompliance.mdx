@@ -82,6 +82,35 @@ Operational compliance monitoring involves systematically observing, measuring, 
 | getCorrectiveActions | Find corrective actions by assignee, due date, or completion status |
 | getComplianceStatus | Retrieve overall compliance posture for a unit or regulation |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ComplianceCheck ||--o{ Deviation : discovers
+    Deviation ||--o{ CorrectiveAction : "addressed by"
+    ComplianceCheck }o--|| Regulation : "evaluates against"
+    ComplianceCheck }o--|| StandardOperatingProcedure : "evaluates against"
+    CorrectiveAction ||--|| ComplianceReport : "documented in"
+    ComplianceReport }o--|| ComplianceCheck : summarizes
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Scheduled : checkScheduled
+    Scheduled --> InProgress : conductCheck
+    InProgress --> Compliant : checkCompleted
+    InProgress --> NonCompliant : deviationRecorded
+    NonCompliant --> Remediating : correctiveActionAssigned
+    Remediating --> Resolved : deviationResolved
+    NonCompliant --> Escalated : violationEscalated
+    Escalated --> Remediating : correctiveActionAssigned
+    Resolved --> Reported : reportGenerated
+    Compliant --> Reported : reportGenerated
+    Reported --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -95,6 +124,7 @@ graph TD
     F -->|Standard| H[assignCorrectiveAction]
     G --> H
     H --> I[resolveDeviation]
+    I -->|Re-verify| B
     I --> D
 ```
 

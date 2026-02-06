@@ -81,6 +81,35 @@ Monitoring work areas and procedures for safety compliance involves conducting w
 | getAuditResults | List safety audit findings by program element, area, or compliance status |
 | findExpiredPermits | Locate work permits that have passed their expiration without renewal |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SafetyProcedure ||--o{ ComplianceObservation : "evaluated by"
+    ComplianceObservation ||--o{ NonConformance : "may produce"
+    NonConformance ||--|{ TrainingRecord : "resolved via"
+    SafetyAudit ||--o{ ComplianceObservation : contains
+    PermitToWork }o--|| SafetyProcedure : "governed by"
+    SafetyAudit }o--|| SafetyProcedure : "validates against"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Walking : walkthroughCompleted
+    Walking --> Observed : behaviorObserved
+    Observed --> Documented : nonConformanceDocumented
+    Observed --> Compliant : permitVerified
+    Documented --> Retraining : retrainingAssigned
+    Documented --> Correcting : nonConformanceDocumented
+    Retraining --> Verified : correctionVerified
+    Correcting --> Verified : correctionVerified
+    Verified --> Walking : walkthroughCompleted
+    Compliant --> Audited : safetyAuditCompleted
+    Audited --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,7 +123,9 @@ graph TD
     F -->|No| H[Issue Corrective Action]
     G --> I[trackCorrection]
     H --> I
-    I --> J[correctionVerified]
+    I --> J{Correction Effective?}
+    J -->|Yes| K[correctionVerified]
+    J -->|No| A
 ```
 
 ## Actor Relationships

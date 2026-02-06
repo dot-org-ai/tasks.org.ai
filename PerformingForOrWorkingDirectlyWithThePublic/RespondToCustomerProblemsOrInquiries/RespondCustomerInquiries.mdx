@@ -80,6 +80,34 @@ Customer inquiry response involves receiving questions through phone, email, cha
 | getInteractions | Retrieve complete service exchange logs for a customer |
 | getSatisfactionMetrics | Query response quality ratings by agent or period |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Inquiry ||--|| Response : answeredBy
+    Inquiry ||--o| KnowledgeArticle : references
+    Inquiry ||--|| InteractionRecord : documented
+    Inquiry ||--o| ResponseTemplate : usesTemplate
+    Response ||--o| SatisfactionRating : ratedWith
+    KnowledgeArticle ||--o{ ResponseTemplate : supports
+    Inquiry ||--o{ Response : receives
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Received : inquiryReceived
+    Received --> Classified : inquiryClassified
+    Classified --> Searched : knowledgeSearched
+    Searched --> Composed : responseComposed
+    Searched --> Escalated : inquiryEscalated
+    Escalated --> Composed : responseComposed
+    Composed --> Delivered : responseDelivered
+    Delivered --> Rated : feedbackCollected
+    Rated --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,7 +119,9 @@ graph TD
     D -->|No| F[escalateInquiry]
     E --> G[deliverResponse]
     F --> E
-    G --> H[collectFeedback]
+    G --> H{Satisfied?}
+    H -->|Yes| I[collectFeedback]
+    H -->|No| B
 ```
 
 ## Actor Relationships

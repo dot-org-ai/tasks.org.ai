@@ -80,6 +80,34 @@ Driving passenger vehicles involves the safe operation of cars, vans, and simila
 | getVehicleMileage | Get cumulative mileage and usage statistics for a vehicle |
 | findOverdueReturns | Identify vehicles not returned by their scheduled time |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Vehicle ||--o{ TripRecord : "used in"
+    Vehicle ||--|| InspectionChecklist : "checked with"
+    TripRecord ||--o{ FuelRecord : "may include"
+    DrivingLog ||--o{ TripRecord : aggregates
+    Vehicle ||--o{ FuelRecord : consumes
+    InspectionChecklist }o--|| TripRecord : "precedes"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> CheckedOut : vehicleCheckedOut
+    CheckedOut --> Inspected : preTripInspectionCompleted
+    Inspected --> Driving : drivingStarted
+    Driving --> MileageLogged : mileageRecorded
+    MileageLogged --> Stopped : drivingStopped
+    Stopped --> Refueled : vehicleRefueled
+    Stopped --> Returned : vehicleReturned
+    Refueled --> Returned : vehicleReturned
+    Inspected --> CheckedOut : preTripInspectionCompleted
+    Returned --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -87,6 +115,7 @@ graph TD
     A[checkOutVehicle] --> B[performPreTripInspection]
     B --> C{Inspection Pass?}
     C -->|No| D[Report Issue]
+    D --> A
     C -->|Yes| E[startDriving]
     E --> F[recordMileage]
     F --> G[stopDriving]

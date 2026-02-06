@@ -82,6 +82,33 @@ Plant and crop quality evaluation involves assessing agricultural products for m
 | getDefectPatterns | Identify common quality issues by field |
 | getMarketPricing | Retrieve pricing data by grade and crop |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    CropInspection ||--|| MaturityEvaluation : includes
+    CropInspection ||--o{ SizeGrading : measures
+    CropInspection ||--o{ DefectRecord : documents
+    SizeGrading }o--|| QualityGrade : "contributes to"
+    DefectRecord }o--|| QualityGrade : influences
+    QualityGrade ||--|| MarketReadiness : determines
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Assessed : cropMaturityAssessed
+    Assessed --> Measured : sizeWeightMeasured
+    Assessed --> Deferred : harvestTimingRecommended
+    Deferred --> Assessed : cropMaturityAssessed
+    Measured --> Inspected : defectsInspected
+    Inspected --> ColorChecked : colorAppearanceEvaluated
+    ColorChecked --> QualityTested : productQualityTested
+    QualityTested --> Graded : marketGradeAssigned
+    Graded --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,10 +116,14 @@ graph TD
     A[assessCropMaturity] --> B{Ready for Harvest?}
     B -->|Yes| C[measureSizeWeight]
     B -->|No| D[recommendHarvestTiming]
+    D --> A
     C --> E[inspectForDefects]
     E --> F[evaluateColorAppearance]
     F --> G[testProductQuality]
-    G --> H[assignMarketGrade]
+    G --> H{Meets Grade Standards?}
+    H -->|Yes| I[assignMarketGrade]
+    H -->|No| J[Downgrade or Retest]
+    J --> G
 ```
 
 ## Actor Relationships

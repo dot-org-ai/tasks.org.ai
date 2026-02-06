@@ -80,16 +80,47 @@ Moving large objects with heavy equipment involves coordinating crane lifts, for
 | getEquipmentCertifications | Retrieve certification and inspection records for heavy equipment |
 | getLoadHistory | Look up past lift operations for a specific object or site |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    LiftPlan ||--|| LoadObject : specifies
+    LiftPlan ||--|| HeavyEquipment : assigns
+    LiftPlan ||--|| RiggingAssembly : configures
+    LoadObject ||--|| PlacementZone : "delivered to"
+    LiftPlan ||--|| SafetyPermit : requires
+    HeavyEquipment ||--|| SafetyPermit : "certified by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Planning
+    Planning --> Planned : liftPlanCreated
+    Planned --> Inspected : equipmentInspected
+    Inspected --> Rigged : loadRigged
+    Rigged --> Lifted : liftExecuted
+    Lifted --> Positioned : loadPositioned
+    Positioned --> Set : loadSet
+    Positioned --> Rigged : Reposition needed
+    Set --> Documented : liftReportCompleted
+    Documented --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[createLiftPlan] --> B[inspectEquipment]
-    B --> C[rigLoad]
-    C --> D[executeLift]
-    D --> E[positionLoad]
-    E --> F[setLoad]
-    F --> G[completeLiftReport]
+    B --> C{Equipment Certified?}
+    C -->|Yes| D[rigLoad]
+    C -->|No| E[Service Equipment]
+    E --> B
+    D --> F[executeLift]
+    F --> G[positionLoad]
+    G --> H[setLoad]
+    H --> I[completeLiftReport]
 ```
 
 ## Actor Relationships

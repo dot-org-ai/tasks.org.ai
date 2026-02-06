@@ -82,6 +82,33 @@ Ordering medical supplies and equipment involves managing clinical inventory, co
 | getContracts | Find active vendor agreements and pricing |
 | getLotNumbers | Track batch numbers for recalls or safety alerts |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SupplyOrder ||--o{ MedicalItem : contains
+    SupplyOrder }o--|| Contract : "priced by"
+    MedicalItem ||--o{ LotNumber : "tracked by"
+    Inventory ||--o{ MedicalItem : stocks
+    Inventory ||--o{ ReorderPoint : "triggers at"
+    ReorderPoint }o--|| SupplyOrder : generates
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Monitoring
+    Monitoring --> BelowReorder : inventoryChecked
+    BelowReorder --> OrderCreated : orderCreated
+    OrderCreated --> ContractVerified : contractVerified
+    ContractVerified --> Ordered : purchaseOrderPlaced
+    Ordered --> InTransit : shipmentTracked
+    InTransit --> Received : suppliesReceived
+    Received --> Monitoring : inventoryUpdated
+    Monitoring --> Monitoring : inventoryChecked
+```
+
 ## Workflow
 
 ```mermaid
@@ -93,7 +120,11 @@ graph TD
     E --> F[placePurchaseOrder]
     F --> G[trackShipment]
     G --> H[receiveSupplies]
-    H --> I[updateInventory]
+    H --> I{Lot Valid?}
+    I -->|Yes| J[updateInventory]
+    I -->|No| K[Quarantine]
+    K --> C
+    J --> A
 ```
 
 ## Actor Relationships

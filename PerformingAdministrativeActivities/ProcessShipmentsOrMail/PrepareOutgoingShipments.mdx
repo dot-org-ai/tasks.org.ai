@@ -81,6 +81,33 @@ Preparing outgoing shipments involves picking ordered items from inventory, pack
 | findPendingShipments | Locate shipping orders awaiting preparation |
 | getShippingCosts | Retrieve shipping expense data by period, carrier, or destination |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ShippingOrder ||--|| Shipment : creates
+    Shipment ||--|| PackingSlip : contains
+    Shipment ||--|| ShippingLabel : affixed
+    Shipment ||--|| BillOfLading : documented
+    Shipment ||--|| TrackingNumber : assigned
+    ShippingOrder ||--o{ Shipment : splits
+    Shipment ||--o{ PackingSlip : includes
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Picking : itemsPicked
+    Picking --> Packaged : shipmentPackaged
+    Packaged --> Labeled : shippingLabelGenerated
+    Labeled --> Costed : shippingCostCalculated
+    Costed --> Scheduled : carrierPickupScheduled
+    Scheduled --> Dispatched : shipmentDispatched
+    Labeled --> Picking : items missing
+    Dispatched --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -88,9 +115,11 @@ graph TD
     A[pickItems] --> B[packageShipment]
     B --> C[createPackingSlip]
     C --> D[calculateShippingCost]
-    D --> E[generateShippingLabel]
-    E --> F[scheduleCarrierPickup]
-    F --> G[dispatchShipment]
+    D --> E{Cost Approved?}
+    E -->|Yes| F[generateShippingLabel]
+    E -->|No| D
+    F --> G[scheduleCarrierPickup]
+    G --> H[dispatchShipment]
 ```
 
 ## Actor Relationships

@@ -82,6 +82,34 @@ Driving vehicles to transport patrons encompasses the operation of cars, buses, 
 | getTripHistory | Retrieve completed trip records for a patron or driver |
 | findAvailableDrivers | List drivers available for assignment within a service area |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Trip ||--|| Vehicle : "uses"
+    Trip ||--|| Route : follows
+    Trip ||--|| Patron : transports
+    Trip ||--|| TripLog : "recorded in"
+    DriverLicense }o--|| Vehicle : "authorizes operation of"
+    Patron }o--|| Trip : "assigned to"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Assigned : tripAssigned
+    Assigned --> Started : tripStarted
+    Started --> PickedUp : patronPickedUp
+    PickedUp --> Navigating : routeDeviated
+    Navigating --> PickedUp : patronPickedUp
+    PickedUp --> DroppedOff : patronDroppedOff
+    DroppedOff --> Completed : tripCompleted
+    Navigating --> IncidentLogged : incidentReported
+    IncidentLogged --> DroppedOff : patronDroppedOff
+    Completed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -93,7 +121,9 @@ graph TD
     E -->|Yes| F[reportIncident]
     E -->|No| G[dropOffPatron]
     F --> G
-    G --> H[completeTrip]
+    G --> H{More Passengers?}
+    H -->|Yes| C
+    H -->|No| I[completeTrip]
 ```
 
 ## Actor Relationships

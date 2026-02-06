@@ -82,6 +82,33 @@ Organizational compliance monitoring involves establishing a comprehensive frame
 | getFindings | Find compliance findings by severity, status, or responsible unit |
 | getCompliancePosture | Retrieve aggregate compliance status across the organization |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    RegulatoryObligation ||--o{ ComplianceAssessment : "evaluated by"
+    ComplianceAssessment ||--o{ ComplianceFinding : produces
+    ComplianceFinding ||--o{ RemediationPlan : "addressed by"
+    RegulatoryChange ||--|{ RegulatoryObligation : amends
+    ComplianceDashboard ||--o{ ComplianceAssessment : aggregates
+    RemediationPlan }o--|| ComplianceFinding : resolves
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Tracked : regulatoryChangeTracked
+    Tracked --> Assessed : impactAssessed
+    Assessed --> Mapped : obligationMapped
+    Mapped --> Evaluating : assessmentCompleted
+    Evaluating --> GapFound : findingRecorded
+    GapFound --> Remediating : remediationPlanCreated
+    Remediating --> Evaluating : assessmentCompleted
+    Evaluating --> Certified : complianceCertified
+    Certified --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,8 +121,10 @@ graph TD
     E -->|No| G[recordFinding]
     G --> H[createRemediationPlan]
     H --> I[Execute Remediation]
-    I --> J[conductAssessment]
-    J --> F
+    I --> D
+    F --> J{New Regulation?}
+    J -->|Yes| A
+    J -->|No| K[Dashboard Updated]
 ```
 
 ## Actor Relationships

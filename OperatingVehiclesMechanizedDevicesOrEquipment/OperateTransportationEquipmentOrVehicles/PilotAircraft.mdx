@@ -84,6 +84,34 @@ Piloting aircraft involves planning flight routes, conducting preflight inspecti
 | getFlightLogs | Look up historical flight records by pilot or aircraft |
 | getNOTAMs | Retrieve active notices for a route or airport |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    FlightPlan ||--|| AircraftRecord : specifies
+    FlightPlan ||--|| WeatherBriefing : incorporates
+    FlightPlan ||--|| NOTAMPackage : references
+    FlightPlan ||--|| LoadManifest : includes
+    AircraftRecord ||--o{ PreflightChecklist : requires
+    FlightPlan ||--|| FlightLog : produces
+    AircraftRecord ||--o{ FlightLog : accumulates
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Filed : flightPlanFiled
+    Filed --> Briefed : weatherBriefingObtained
+    Briefed --> Preflighted : preflightCompleted
+    Preflighted --> Airborne : takeoffExecuted
+    Airborne --> EnRoute : waypointReached
+    EnRoute --> EnRoute : waypointReached
+    EnRoute --> Landed : approachExecuted
+    Landed --> Complete : postFlightCompleted
+    Complete --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,8 +122,10 @@ graph TD
     D -->|No| E[completePostFlight]
     D -->|Yes| F[executeTakeoff]
     F --> G[navigateEnRoute]
-    G --> H[executeApproach]
-    H --> E
+    G --> H{Diversion Needed?}
+    H -->|Yes| A
+    H -->|No| I[executeApproach]
+    I --> E
 ```
 
 ## Actor Relationships
