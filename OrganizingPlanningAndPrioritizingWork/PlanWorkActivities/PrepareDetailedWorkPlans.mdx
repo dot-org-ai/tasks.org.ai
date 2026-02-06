@@ -81,18 +81,49 @@ Preparing detailed work plans involves breaking down project objectives into spe
 | getResourceUtilization | Query resource allocation across tasks and plans |
 | getCriticalPath | Identify the longest dependency chain determining project duration |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    WorkPlan ||--|{ Task : "contains"
+    WorkPlan ||--|{ Milestone : "targets"
+    Task ||--o{ ResourceAssignment : "staffedBy"
+    Task ||--o{ Dependency : "sequencedBy"
+    WorkPlan ||--o{ RiskItem : "mitigates"
+    Milestone }o--|{ Task : "achievedBy"
+    Dependency }o--|| Task : "blocks"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Creation
+    Creation --> TaskDefinition : workPlanCreated
+    TaskDefinition --> DependencyMapping : taskDefined
+    DependencyMapping --> MilestoneSetting : dependenciesMapped
+    DependencyMapping --> TaskDefinition : dependencyConflictDetected
+    MilestoneSetting --> Resourcing : milestoneSet
+    Resourcing --> Review : resourcesAssigned
+    Review --> TaskDefinition : revisionsRequired
+    Review --> Finalized : planFinalized
+    Finalized --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[createWorkPlan] --> B[defineTask]
     B --> C[linkDependencies]
-    C --> D[setMilestone]
-    D --> E[assignResources]
-    E --> F[reviewPlan]
-    F --> G{Approved?}
-    G -->|No| B
-    G -->|Yes| H[finalizePlan]
+    C --> D{Conflicts?}
+    D -->|Yes| B
+    D -->|No| E[setMilestone]
+    E --> F[assignResources]
+    F --> G[reviewPlan]
+    G --> H{Approved?}
+    H -->|No| B
+    H -->|Yes| I[finalizePlan]
 ```
 
 ## Actor Relationships

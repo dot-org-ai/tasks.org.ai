@@ -81,6 +81,33 @@ Environmental control system design involves characterizing pollutant sources, s
 | listTechnologies | Enumerate evaluated control options |
 | getComplianceHistory | Look up permit compliance records |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SourceCharacterization ||--|{ TechnologyAssessment : evaluatedBy
+    SystemDesign ||--|| TechnologyAssessment : basedOn
+    SystemDesign ||--|| PermitApplication : authorizedBy
+    SystemDesign ||--|| MonitoringSystem : trackedBy
+    MonitoringSystem ||--|{ ComplianceRecord : generates
+    PermitApplication }o--|{ ComplianceRecord : requires
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> SourcesCharacterized
+    SourcesCharacterized --> TechAssessed : sourcesCharacterized
+    TechAssessed --> Designed : technologiesAssessed
+    Designed --> Modeled : systemDesigned
+    Modeled --> Designed : below limits
+    Modeled --> Permitted : performanceModeled
+    Permitted --> Installed : permitSubmitted
+    Installed --> Monitoring : systemInstalled
+    Monitoring --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,10 +116,14 @@ graph TD
     B --> C[designSystem]
     C --> D[modelPerformance]
     D --> E{Meets Limits?}
-    E -->|No| C
-    E -->|Yes| F[submitPermit]
-    F --> G[installSystem]
-    G --> H[monitorCompliance]
+    E -->|No| F{Technology or Sizing Issue?}
+    F -->|Technology| B
+    F -->|Sizing| C
+    E -->|Yes| G[submitPermit]
+    G --> H{Permit Approved?}
+    H -->|No| C
+    H -->|Yes| I[installSystem]
+    I --> J[monitorCompliance]
 ```
 
 ## Actor Relationships

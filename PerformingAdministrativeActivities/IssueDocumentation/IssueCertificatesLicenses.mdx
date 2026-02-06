@@ -81,6 +81,38 @@ Issuing certificates and licenses involves evaluating applicant qualifications, 
 | getExpiringCredentials | Query credentials approaching their expiration date |
 | getCredentialHistory | Look up the full lifecycle history of a specific credential |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    CertificateApplication ||--|| QualificationRecord : "supportsVia"
+    CertificateApplication ||--o| Certificate : "resultsIn"
+    CertificateApplication ||--o| License : "resultsIn"
+    Certificate ||--|| CredentialRegistry : "registeredIn"
+    License ||--|| CredentialRegistry : "registeredIn"
+    Certificate ||--o| RenewalNotice : "triggersRenewalVia"
+    License ||--o| RenewalNotice : "triggersRenewalVia"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ApplicationReceived
+    ApplicationReceived --> QualificationsReview : applicationSubmitted
+    QualificationsReview --> BackgroundCheck : qualificationsVerified
+    QualificationsReview --> Rejected : qualificationsFailed
+    BackgroundCheck --> Approved : backgroundCheckCompleted
+    BackgroundCheck --> Rejected : clearanceDenied
+    Approved --> Issued : certificationApproved
+    Issued --> Active : certificateGenerated
+    Active --> RenewalPending : approachingExpiration
+    RenewalPending --> Active : credentialRenewed
+    Active --> Revoked : credentialRevoked
+    Revoked --> [*]
+    Rejected --> [*]
+```
+
 ## Workflow
 
 ```mermaid

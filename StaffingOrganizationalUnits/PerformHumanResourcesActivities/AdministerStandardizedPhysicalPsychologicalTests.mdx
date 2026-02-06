@@ -86,6 +86,35 @@ Administering standardized physical and psychological tests involves selecting v
 | getAccommodations | Fetch accommodation requests by candidate or status |
 | getAssessmentAnalytics | Retrieve aggregate test data by role, department, or period |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TestInstrument ||--o{ TestSession : "administered in"
+    TestSession ||--|| TestResult : "produces"
+    TestSession }o--|| CandidateProfile : "evaluates"
+    TestResult ||--|| TestReport : "summarized in"
+    TestResult }o--|| NormativeData : "compared against"
+    CandidateProfile ||--o| AccommodationRequest : "may require"
+    TestSession ||--o| AccommodationRequest : "modified by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> InstrumentSelected
+    InstrumentSelected --> SessionScheduled : testSessionScheduled
+    SessionScheduled --> AccommodationReviewed : accommodationProcessed
+    SessionScheduled --> Administered : testAdministered
+    AccommodationReviewed --> SessionScheduled : testSessionScheduled
+    AccommodationReviewed --> Administered : testAdministered
+    Administered --> Scored : testScored
+    Scored --> Interpreted : resultsInterpreted
+    Interpreted --> Reported : testReportGenerated
+    Reported --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -97,8 +126,10 @@ graph TD
     D --> E
     E --> F[scoreTest]
     F --> G[interpretResults]
-    G --> H[generateTestReport]
-    H --> I[archiveResults]
+    G --> H{Results Valid?}
+    H -->|No| E
+    H -->|Yes| I[generateTestReport]
+    I --> J[archiveResults]
 ```
 
 ## Actor Relationships

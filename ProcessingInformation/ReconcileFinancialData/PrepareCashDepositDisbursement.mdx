@@ -81,6 +81,37 @@ Preparing cash for deposit or disbursement involves counting currency and coin, 
 | getTransitStatus | Track cash packages currently in transit |
 | getDenominationInventory | Summarize available cash by denomination |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    CashCount ||--|| DenominationBreakdown : "detailed by"
+    CashCount ||--o{ DiscrepancyRecord : "may have"
+    CashCount ||--o| DepositPackage : "packaged into"
+    CashCount ||--o| DisbursementVoucher : "disbursed via"
+    DepositPackage ||--|| TransitManifest : "tracked in"
+    DisbursementVoucher ||--o| TransitManifest : "tracked in"
+    DiscrepancyRecord ||--|| CashCount : "triggers recount of"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Counting
+    Counting --> Verifying : cashCounted
+    Verifying --> Sorted : amountVerified
+    Verifying --> DiscrepancyFound : discrepancyRecorded
+    DiscrepancyFound --> Counting : recount
+    Sorted --> Packaging : depositPackaged
+    Sorted --> Disbursing : disbursementPrepared
+    Packaging --> AwaitingPickup : packageDeposit
+    Disbursing --> Completed : disbursementPrepared
+    AwaitingPickup --> InTransit : pickupScheduled
+    InTransit --> [*]
+    Completed --> [*]
+```
+
 ## Workflow
 
 ```mermaid

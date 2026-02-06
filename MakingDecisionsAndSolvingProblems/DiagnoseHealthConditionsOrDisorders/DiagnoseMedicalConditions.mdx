@@ -91,6 +91,38 @@ Diagnosing medical conditions involves systematically gathering clinical informa
 | getClinicalHistory | Retrieve patient history by condition type or time period |
 | findDiagnosesByCode | Search confirmed diagnoses by ICD code, category, or physician |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    PatientEncounter ||--|| ClinicalHistory : "informed-by"
+    PatientEncounter ||--|| PhysicalExamination : "includes"
+    PatientEncounter ||--|{ DiagnosticOrder : "generates"
+    DiagnosticOrder ||--|{ TestResult : "produces"
+    TestResult }o--|| DifferentialDiagnosis : "supports"
+    DifferentialDiagnosis ||--|| ConfirmedDiagnosis : "resolves-to"
+    PatientEncounter ||--|| ClinicalNote : "documented-in"
+    ConfirmedDiagnosis }o--|| ClinicalNote : "recorded-in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> HistoryReview
+    HistoryReview --> SymptomAssessment : clinicalHistoryReviewed
+    SymptomAssessment --> Examination : symptomsAssessed
+    Examination --> TestOrdering : examinationPerformed
+    TestOrdering --> AwaitingResults : diagnosticTestsOrdered
+    AwaitingResults --> Interpretation : testResultsReceived
+    Interpretation --> DifferentialFormulation : testResultsReceived
+    DifferentialFormulation --> SpecialistConsultation : specialistConsulted
+    SpecialistConsultation --> TestOrdering : additionalTestsNeeded
+    DifferentialFormulation --> Confirmed : diagnosisConfirmed
+    Confirmed --> PublicHealthReporting : reportableConditionIdentified
+    Confirmed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -102,10 +134,14 @@ graph TD
     E --> F[formulateDifferential]
     F --> G{Diagnosis Clear?}
     G -->|No| H[consultSpecialist]
-    H --> I[orderDiagnosticTests]
-    I --> E
+    H --> I{Additional Tests Needed?}
+    I -->|Yes| D
+    I -->|No| F
     G -->|Yes| J[confirmDiagnosis]
-    J --> K[documentFindings]
+    J --> K{Reportable Condition?}
+    K -->|Yes| L[Report to Public Health]
+    K -->|No| M[documentFindings]
+    L --> M
 ```
 
 ## Actor Relationships

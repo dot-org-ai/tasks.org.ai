@@ -81,6 +81,33 @@ Communicating with others to coordinate vehicle movement involves directing driv
 | getTrafficAdvisories | Find current traffic advisories affecting fleet routes |
 | getArrivalHistory | Look up arrival confirmations by vehicle, destination, or date range |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    RouteAssignment ||--|{ DispatchOrder : "executed via"
+    DispatchOrder ||--|{ VehiclePosition : "tracked by"
+    RouteAssignment ||--o{ TrafficAdvisory : "affected by"
+    DispatchOrder ||--|| ArrivalConfirmation : "completed with"
+    RouteAssignment ||--o{ FuelStop : "includes"
+    TrafficAdvisory }o--|| RouteAssignment : "may reroute"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RouteAssigned
+    RouteAssigned --> VehicleDispatched : vehicleDispatched
+    VehicleDispatched --> PositionUpdated : positionUpdated
+    PositionUpdated --> TrafficAdvisoryIssued : trafficAdvisoryIssued
+    PositionUpdated --> ArrivalConfirmed : arrivalConfirmed
+    TrafficAdvisoryIssued --> VehicleRerouted : vehicleRerouted
+    VehicleRerouted --> PositionUpdated : positionUpdated
+    ArrivalConfirmed --> VehicleDispatched : nextStop
+    ArrivalConfirmed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,12 +118,15 @@ graph TD
     D -->|Yes| E[issueTrafficAdvisory]
     E --> F[rerouteVehicle]
     F --> C
-    D -->|No| G{At Destination?}
-    G -->|No| C
-    G -->|Yes| H[confirmArrival]
-    H --> I{More Stops?}
-    I -->|Yes| B
-    I -->|No| J[Complete]
+    D -->|No| G{Fuel Needed?}
+    G -->|Yes| H[logFuelStop]
+    H --> C
+    G -->|No| I{At Destination?}
+    I -->|No| C
+    I -->|Yes| J[confirmArrival]
+    J --> K{More Stops?}
+    K -->|Yes| B
+    K -->|No| L[Complete]
 ```
 
 ## Actor Relationships

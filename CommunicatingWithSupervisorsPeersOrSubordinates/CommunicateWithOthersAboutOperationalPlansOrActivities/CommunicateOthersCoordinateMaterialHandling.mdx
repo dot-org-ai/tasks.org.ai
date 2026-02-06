@@ -81,6 +81,34 @@ Communicating with others to coordinate material handling or movement involves r
 | getPendingMovements | Look up assigned but incomplete movement orders |
 | getShipmentSchedule | Find upcoming inbound and outbound shipment times |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MaterialRequest ||--|| MovementOrder : "fulfilled by"
+    MovementOrder ||--|| StorageLocation : "targets"
+    ShipmentNotice ||--o| MaterialRequest : "triggers"
+    InventoryRecord }o--|| StorageLocation : "tracked at"
+    LoadPlan ||--|{ MovementOrder : "sequences"
+    MaterialRequest }o--|| InventoryRecord : "draws from"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> MaterialRequested
+    MaterialRequested --> MovementAssigned : movementAssigned
+    MovementAssigned --> StagingCompleted : stagingCompleted
+    StagingCompleted --> DamageReported : damageReported
+    StagingCompleted --> LocationUpdated : locationUpdated
+    DamageReported --> MaterialRequested : replacement
+    LocationUpdated --> PickupScheduled : pickupScheduled
+    LocationUpdated --> ReceiptConfirmed : receiptConfirmed
+    PickupScheduled --> [*]
+    ReceiptConfirmed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,12 +118,12 @@ graph TD
     C --> D{Damage Found?}
     D -->|Yes| E[flagDamage]
     D -->|No| F[updateLocation]
-    E --> G[requestMaterial]
-    F --> H{Outbound?}
-    H -->|Yes| I[schedulePickup]
-    H -->|No| J[confirmReceipt]
-    I --> K[Complete]
-    J --> K
+    E --> A
+    F --> G{Outbound?}
+    G -->|Yes| H[schedulePickup]
+    G -->|No| I[confirmReceipt]
+    H --> J[Complete]
+    I --> J
 ```
 
 ## Actor Relationships

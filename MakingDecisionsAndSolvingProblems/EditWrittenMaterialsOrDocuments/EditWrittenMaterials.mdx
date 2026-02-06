@@ -79,6 +79,34 @@ Editing written materials encompasses reviewing, revising, and refining document
 | getRevisionHistory | Retrieve all revisions and comments for a given document |
 | getPendingReviews | Find documents awaiting editorial action |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Manuscript ||--|{ Revision : "versioned-as"
+    Revision ||--|{ EditorialComment : "annotated-with"
+    Manuscript ||--|| StyleGuide : "governed-by"
+    Manuscript ||--|| PublicationProof : "formatted-as"
+    EditorialComment }o--|| Revision : "addressed-in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Submitted
+    Submitted --> InReview : manuscriptSubmitted
+    InReview --> CopyEditing : draftReviewed
+    InReview --> Rejected : manuscriptRejected
+    CopyEditing --> RevisionRequested : revisionRequested
+    RevisionRequested --> CopyEditing : copyEditCompleted
+    CopyEditing --> Proofreading : copyEditCompleted
+    Proofreading --> CopyEditing : errorsFound
+    Proofreading --> Approved : proofreadCompleted
+    Approved --> Published : publicationApproved
+    Published --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -87,11 +115,14 @@ graph TD
     B --> C{Meets Standards?}
     C -->|Yes| D[copyEdit]
     C -->|No| E[rejectManuscript]
-    D --> F[requestRevision]
-    F --> G[Author Revises]
-    G --> D
-    D --> H[proofread]
-    H --> I[approveForPublication]
+    D --> F{Revisions Needed?}
+    F -->|Yes| G[requestRevision]
+    G --> H[Author Revises]
+    H --> D
+    F -->|No| I[proofread]
+    I --> J{Errors Found?}
+    J -->|Yes| D
+    J -->|No| K[approveForPublication]
 ```
 
 ## Actor Relationships

@@ -81,6 +81,38 @@ Computer system performance monitoring involves the continuous tracking of CPU u
 | getHealthCheckStatus | Look up current health check results by service or host group |
 | findSLOBreaches | Identify services that have fallen below their availability or response time targets |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SystemMetric ||--o{ PerformanceAlert : "triggers"
+    SystemMetric }o--|| ServiceLevelObjective : "measured against"
+    HealthCheck ||--o{ PerformanceAlert : "generates"
+    PerformanceAlert ||--o{ IncidentTicket : "escalates to"
+    IncidentTicket }o--|| CapacityAllocation : "may adjust"
+    ServiceLevelObjective ||--o{ IncidentTicket : "breached by"
+    CapacityAllocation }o--|| SystemMetric : "affects"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Collecting
+    Collecting --> MetricsGathered : metricsCollected
+    MetricsGathered --> Healthy : healthCheckPassed
+    MetricsGathered --> CheckFailed : healthCheckFailed
+    Healthy --> Collecting : metricsCollected
+    CheckFailed --> AlertActive : alertTriggered
+    AlertActive --> Diagnosing : investigating
+    Diagnosing --> RootCauseFound : rootCauseIdentified
+    RootCauseFound --> Scaled : resourcesScaled
+    RootCauseFound --> Optimized : optimizationApplied
+    Scaled --> Collecting : metricsCollected
+    Optimized --> Collecting : metricsCollected
+    Healthy --> Reported : availabilityReported
+```
+
 ## Workflow
 
 ```mermaid

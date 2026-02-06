@@ -81,19 +81,51 @@ Planning trapping and hunting activities involves identifying target species, ob
 | getSpeciesData | Retrieve population surveys and trend data for a specific species and region |
 | getHarvestHistory | Access historical harvest records by territory, season, or species |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    HarvestPlan ||--|| Permit : "authorizedBy"
+    HarvestPlan ||--|| Territory : "conductedIn"
+    HarvestPlan ||--|| EquipmentManifest : "equippedWith"
+    HarvestPlan ||--o| HarvestReport : "documentedIn"
+    SpeciesSurvey ||--|| HarvestPlan : "informs"
+    Territory ||--|| SpeciesSurvey : "assessedBy"
+    HarvestReport }o--|| Permit : "fulfillsRequirementsOf"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> SpeciesReview
+    SpeciesReview --> Permitting : speciesAssessed
+    Permitting --> TerritorySelection : permitsObtained
+    Permitting --> SpeciesReview : permitDenied
+    TerritorySelection --> GearPrep : territorySelected
+    GearPrep --> LogisticsPlanning : equipmentPrepared
+    LogisticsPlanning --> InField : logisticsPlanned
+    InField --> Reporting : activityCompleted
+    InField --> InField : harvestContinues
+    Reporting --> [*] : harvestReported
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[assessSpecies] --> B[obtainPermits]
-    B --> C[selectTerritory]
-    C --> D[prepareEquipment]
-    D --> E[planLogistics]
-    E --> F[conductActivity]
-    F --> G[reportHarvest]
-    G --> H{Season Open?}
-    H -->|Yes| F
-    H -->|No| I[Close Season Records]
+    B --> C{Permits Granted?}
+    C -->|No| D[Appeal or Reapply]
+    D --> A
+    C -->|Yes| E[selectTerritory]
+    E --> F[prepareEquipment]
+    F --> G[planLogistics]
+    G --> H[conductActivity]
+    H --> I[reportHarvest]
+    I --> J{Season Open?}
+    J -->|Yes| H
+    J -->|No| K[Close Season Records]
 ```
 
 ## Actor Relationships

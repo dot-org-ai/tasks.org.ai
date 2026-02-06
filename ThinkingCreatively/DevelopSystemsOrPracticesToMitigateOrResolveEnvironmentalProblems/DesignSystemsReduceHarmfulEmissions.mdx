@@ -82,6 +82,33 @@ Emission reduction system design involves quantifying emission inventories, eval
 | listMonitoringData | Enumerate continuous emissions readings |
 | getVerificationReports | Look up third-party reduction confirmations |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    EmissionInventory ||--|{ AbatementDesign : addresses
+    AbatementDesign ||--|| DispersionModel : verifiedBy
+    AbatementDesign ||--|{ ContinuousEmissionsMonitor : monitoredBy
+    PermitModification }o--|| AbatementDesign : authorizes
+    CarbonOffset }o--|| ReductionVerification : certifiedBy
+    ReductionVerification }o--|| ContinuousEmissionsMonitor : basedOn
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> InventoryComplete
+    InventoryComplete --> OptionsAssessed : inventoryDeveloped
+    OptionsAssessed --> SystemDesigned : abatementOptionsAssessed
+    SystemDesigned --> Modeled : abatementSystemDesigned
+    Modeled --> SystemDesigned : below standards
+    Modeled --> PermitFiled : dispersionModeled
+    PermitFiled --> MonitoringActive : permitModificationFiled
+    MonitoringActive --> Verified : monitoringInstalled
+    Verified --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,10 +117,15 @@ graph TD
     B --> C[designAbatementSystem]
     C --> D[modelDispersion]
     D --> E{Meets Standards?}
-    E -->|No| C
-    E -->|Yes| F[filePermitModification]
-    F --> G[installMonitoring]
-    G --> H[verifyReductions]
+    E -->|No| F{Abatement or Design Issue?}
+    F -->|Abatement| B
+    F -->|Design| C
+    E -->|Yes| G[filePermitModification]
+    G --> H[installMonitoring]
+    H --> I[verifyReductions]
+    I --> J{Verified?}
+    J -->|No| C
+    J -->|Yes| K[Complete]
 ```
 
 ## Actor Relationships

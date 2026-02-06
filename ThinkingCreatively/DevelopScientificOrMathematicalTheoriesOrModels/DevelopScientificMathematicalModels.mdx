@@ -81,6 +81,34 @@ Developing scientific and mathematical models involves translating observed phen
 | getComputationRuns | Find model execution results by parameter configuration or run date |
 | getValidationReports | Retrieve validation outcomes and accuracy metrics for a model |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Model ||--|{ Equation : governedBy
+    Model ||--|| Algorithm : solvedBy
+    Model ||--|{ ParameterSpace : evaluatedOver
+    Model ||--|{ ValidationReport : validatedBy
+    ExperimentalDataset ||--|{ ParameterSpace : constrains
+    Algorithm }o--|| ExperimentalDataset : fittedTo
+    ValidationReport }o--|| ExperimentalDataset : comparedAgainst
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ProblemFormulated
+    ProblemFormulated --> EquationsDerived : problemFormulated
+    EquationsDerived --> SolverReady : equationsDerived
+    SolverReady --> ParametersFitted : solverImplemented
+    ParametersFitted --> Computing : parametersFitted
+    Computing --> Validating : computationCompleted
+    Validating --> EquationsDerived : predictions inaccurate
+    Validating --> Documented : predictionsValidated
+    Documented --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,9 +119,12 @@ graph TD
     D --> E[runComputation]
     E --> F[validatePredictions]
     F --> G{Accurate?}
-    G -->|No| H[Refine Equations]
-    H --> B
-    G -->|Yes| I[documentModel]
+    G -->|No| H{Equations or Parameters?}
+    H -->|Equations| I[Refine Equations]
+    I --> B
+    H -->|Parameters| J[Re-fit Parameters]
+    J --> D
+    G -->|Yes| K[documentModel]
 ```
 
 ## Actor Relationships

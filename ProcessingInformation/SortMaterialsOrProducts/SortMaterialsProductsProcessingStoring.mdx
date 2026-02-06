@@ -87,6 +87,37 @@ Sorting materials and products for processing, storing, shipping, or grading is 
 | getBatchSummary | Summarize a sort batch by destination type, grade, and count |
 | getStorageUtilization | Query warehouse bin occupancy after sorting operations |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SortBatch ||--|{ InboundItem : contains
+    InboundItem ||--|| SortCriteria : "evaluated by"
+    InboundItem ||--|| RoutingDestination : "directed to"
+    InboundItem ||--o| GradeResult : "graded as"
+    InboundItem ||--o| SortException : "may trigger"
+    RoutingDestination ||--o| StorageLocation : "may be"
+    RoutingDestination ||--o| ShipmentManifest : "may be"
+    ShipmentManifest ||--|{ InboundItem : includes
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Received
+    Received --> Classified : itemClassified
+    Classified --> RoutedProcessing : itemRoutedToProcessing
+    Classified --> RoutedStorage : itemRoutedToStorage
+    Classified --> RoutedShipping : itemRoutedToShipping
+    Classified --> Exception : exceptionFlagged
+    Exception --> Classified : reclassify
+    RoutedProcessing --> Confirmed : placementConfirmed
+    RoutedStorage --> Confirmed : placementConfirmed
+    RoutedShipping --> Confirmed : placementConfirmed
+    Confirmed --> [*]
+```
+
 ## Workflow
 
 ```mermaid

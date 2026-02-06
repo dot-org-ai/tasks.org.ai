@@ -81,6 +81,35 @@ Developing healthcare quality and safety procedures involves creating standardiz
 | getIncidentReports | Find incident reports by type, severity, or department |
 | getAuditRecords | Retrieve audit results by procedure, auditor, or compliance score |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Procedure ||--|{ QualityMetric : measures
+    Procedure ||--|{ TrainingModule : taughtBy
+    Procedure ||--|{ AuditRecord : auditedBy
+    GapAnalysis ||--|{ Procedure : informs
+    IncidentReport }o--|| Procedure : triggersUpdate
+    AuditRecord }o--|{ QualityMetric : evaluates
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> GapAssessment
+    GapAssessment --> EvidenceReview : gapAnalysisCompleted
+    EvidenceReview --> Drafting : evidenceReviewed
+    Drafting --> Approval : procedureDrafted
+    Approval --> Drafting : revisions needed
+    Approval --> Training : procedureApproved
+    Training --> Monitoring : trainingDeployed
+    Monitoring --> Updating : complianceAudited below threshold
+    Updating --> Approval : procedureUpdated
+    Monitoring --> Monitoring : compliant
+    Monitoring --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -88,13 +117,16 @@ graph TD
     A[conductGapAnalysis] --> B[reviewClinicalEvidence]
     B --> C[draftProcedure]
     C --> D[approveProcedure]
-    D --> E[deployTraining]
-    E --> F[monitorCompliance]
-    F --> G{Compliant?}
-    G -->|No| H[updateProcedure]
-    H --> D
-    G -->|Yes| I[Continue Monitoring]
-    I --> F
+    D --> E{Approved?}
+    E -->|No| F[Revise Draft]
+    F --> C
+    E -->|Yes| G[deployTraining]
+    G --> H[monitorCompliance]
+    H --> I{Compliant?}
+    I -->|No| J[updateProcedure]
+    J --> D
+    I -->|Yes| K[Continue Monitoring]
+    K --> H
 ```
 
 ## Actor Relationships

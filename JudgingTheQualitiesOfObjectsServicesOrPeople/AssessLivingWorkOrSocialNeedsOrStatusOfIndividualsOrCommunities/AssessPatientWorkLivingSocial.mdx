@@ -82,6 +82,35 @@ Assessing patient work, living, or social environments involves evaluating the p
 | getRecommendations | Find recommendations by patient, status, or category |
 | getPatientHistory | Retrieve past environmental assessments and outcomes for a patient |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    EnvironmentAssessment ||--o| LivingEnvironment : evaluates
+    EnvironmentAssessment ||--o| WorkEnvironment : evaluates
+    EnvironmentAssessment ||--o| SocialNetwork : evaluates
+    EnvironmentAssessment ||--|{ RiskFactor : identifies
+    RiskFactor ||--o{ Recommendation : "addressed by"
+    Recommendation }o--|| CarePlan : "incorporated into"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Initiated : assessmentInitiated
+    Initiated --> LivingEvaluated : livingConditionsEvaluated
+    Initiated --> WorkEvaluated : workConditionsEvaluated
+    Initiated --> SocialAssessed : socialSupportAssessed
+    LivingEvaluated --> RisksIdentified : riskFactorsIdentified
+    WorkEvaluated --> RisksIdentified : riskFactorsIdentified
+    SocialAssessed --> RisksIdentified : riskFactorsIdentified
+    RisksIdentified --> RecommendationsReady : recommendationsGenerated
+    RecommendationsReady --> PlanUpdated : carePlanUpdated
+    PlanUpdated --> [*]
+    PlanUpdated --> Initiated : reassessment
+```
+
 ## Workflow
 
 ```mermaid
@@ -93,7 +122,10 @@ graph TD
     C --> E
     D --> E
     E --> F[generateRecommendations]
-    F --> G[updateCarePlan]
+    F --> G{Risks Mitigated?}
+    G -->|No| H[updateCarePlan]
+    H --> A
+    G -->|Yes| I[updateCarePlan]
 ```
 
 ## Actor Relationships

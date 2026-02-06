@@ -81,6 +81,37 @@ Issuing documentation and identification to customers or employees involves veri
 | findExpiredDocuments | Query documents that have passed their validity date |
 | getActiveCredentials | List all currently active identification documents |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    IdentificationDocument ||--|| IdentityVerification : "validatedBy"
+    IdentificationDocument ||--|| DocumentTemplate : "generatedFrom"
+    IdentificationDocument ||--|| AccessProfile : "grantsAccessVia"
+    BadgeRequest ||--|| IdentificationDocument : "produces"
+    IssuanceLog ||--|{ IdentificationDocument : "records"
+    IdentificationDocument }o--|| AccessProfile : "linkedTo"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> IdentityCheck
+    IdentityCheck --> Verified : identityVerified
+    IdentityCheck --> IdentityCheck : additionalInfoNeeded
+    Verified --> Created : documentCreated
+    Created --> Issued : documentIssued
+    Issued --> Active : inUse
+    Active --> ReplacementPending : lostOrDamaged
+    ReplacementPending --> Deactivated : documentDeactivated
+    Deactivated --> Created : documentReplaced
+    Active --> Deactivated : documentDeactivated
+    Active --> AccessModified : accessProfileUpdated
+    AccessModified --> Active : profileConfirmed
+    Deactivated --> [*]
+```
+
 ## Workflow
 
 ```mermaid

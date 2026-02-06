@@ -81,6 +81,38 @@ Issuing money, credit, or vouchers involves determining the appropriate instrume
 | getRedemptionHistory | Retrieve redemption records for a recipient or instrument |
 | getExpiringInstruments | Identify instruments approaching their expiration date |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    IssuanceRequest ||--o| CreditNote : "produces"
+    IssuanceRequest ||--o| Voucher : "produces"
+    IssuanceRequest ||--o| Disbursement : "produces"
+    CreditNote ||--o| RedemptionRecord : "redeemedVia"
+    Voucher ||--o| RedemptionRecord : "redeemedVia"
+    Voucher ||--|| ExpirationPolicy : "governedBy"
+    CreditNote ||--|| ExpirationPolicy : "governedBy"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Requested
+    Requested --> PendingApproval : issuanceRequested
+    PendingApproval --> Requested : issuanceDenied
+    PendingApproval --> Generating : issuanceAuthorized
+    Generating --> Distributing : instrumentGenerated
+    Distributing --> Outstanding : instrumentDistributed
+    Outstanding --> Redeemed : instrumentRedeemed
+    Outstanding --> Voided : instrumentVoided
+    Outstanding --> Expired : pastExpirationDate
+    Expired --> Voided : instrumentVoided
+    Redeemed --> Reconciled : outstandingReconciled
+    Voided --> Reconciled : outstandingReconciled
+    Reconciled --> [*]
+```
+
 ## Workflow
 
 ```mermaid

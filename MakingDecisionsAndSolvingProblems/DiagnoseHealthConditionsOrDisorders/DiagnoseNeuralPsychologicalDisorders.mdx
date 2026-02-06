@@ -81,6 +81,35 @@ Diagnosing neural or psychological disorders involves conducting structured clin
 | getNeuroimagingStudies | Look up brain imaging results by patient or study type |
 | getPsychometricScores | Find standardized test scores and normative comparisons |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ClinicalInterview ||--|| PsychometricAssessment : "followed-by"
+    ClinicalInterview ||--o{ NeuroimagingStudy : "may-require"
+    PsychometricAssessment }o--|| Diagnosis : "supports"
+    NeuroimagingStudy }o--|| Diagnosis : "confirms"
+    ElectrophysiologicalRecord }o--|| Diagnosis : "informs"
+    Diagnosis ||--|| TreatmentRecommendation : "drives"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ClinicalInterview
+    ClinicalInterview --> CollateralGathering : interviewCompleted
+    CollateralGathering --> PsychometricTesting : collateralHistoryGathered
+    PsychometricTesting --> NeuroimagingDecision : psychometricsAdministered
+    NeuroimagingDecision --> ImagingOrdered : neuroimagingOrdered
+    ImagingOrdered --> ResultsInterpretation : resultsInterpreted
+    NeuroimagingDecision --> ResultsInterpretation : imagingNotNeeded
+    ResultsInterpretation --> DiagnosisRendered : diagnosisRendered
+    ResultsInterpretation --> PsychometricTesting : additionalTestingNeeded
+    DiagnosisRendered --> TreatmentPlanning : treatmentRecommended
+    TreatmentPlanning --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,8 +120,12 @@ graph TD
     D -->|Yes| E[orderNeuroimaging]
     E --> F[interpretResults]
     D -->|No| F
-    F --> G[renderDiagnosis]
-    G --> H[recommendTreatment]
+    F --> G{Findings Sufficient?}
+    G -->|No| H{Additional Testing Needed?}
+    H -->|Yes| C
+    H -->|No| E
+    G -->|Yes| I[renderDiagnosis]
+    I --> J[recommendTreatment]
 ```
 
 ## Actor Relationships

@@ -83,6 +83,34 @@ Downloading data involves identifying, retrieving, and storing digital files and
 | findScheduledDownloads | List recurring download schedules and their next run |
 | findFailedTransfers | List downloads that did not complete successfully |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    DownloadRequest ||--|| TransferJob : "initiates"
+    TransferJob ||--|| DataFile : "produces"
+    DataFile ||--|| Checksum : "verified by"
+    DownloadSchedule ||--|{ TransferJob : "triggers"
+    StorageQuota ||--|{ DataFile : "constrains"
+    AccessCredential ||--|| DownloadRequest : "authenticates"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Requested
+    Requested --> InProgress : downloadStarted
+    InProgress --> Completed : downloadCompleted
+    InProgress --> Failed : downloadFailed
+    Failed --> InProgress : resumeDownload
+    Completed --> Verified : integrityVerified
+    Completed --> VerifyFailed : integrityFailed
+    VerifyFailed --> Requested : redownload
+    Verified --> Cataloged : catalogDownload
+    Cataloged --> [*]
+```
+
 ## Workflow
 
 ```mermaid

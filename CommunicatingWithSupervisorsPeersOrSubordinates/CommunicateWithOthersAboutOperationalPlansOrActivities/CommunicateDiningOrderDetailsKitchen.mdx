@@ -78,20 +78,53 @@ Communicating dining or order details to kitchen personnel involves transmitting
 | getTicketDetails | Retrieve full details of a specific order ticket including modifications |
 | getAllergenAlerts | Find all orders with active allergen or dietary flags |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TableSession ||--|{ OrderTicket : generates
+    OrderTicket ||--|{ MenuItem : contains
+    MenuItem ||--o{ Modification : "adjusted by"
+    OrderTicket ||--|| CourseSequence : "timed by"
+    MenuItem ||--o{ Modification : "flagged with allergen"
+    OrderTicket }o--|| TableSession : "belongs to"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> OrderSubmitted
+    OrderSubmitted --> AllergenFlagged : allergenFlagged
+    OrderSubmitted --> TicketAcknowledged : ticketAcknowledged
+    AllergenFlagged --> TicketAcknowledged : ticketAcknowledged
+    TicketAcknowledged --> OrderModified : orderModified
+    TicketAcknowledged --> CourseFired : courseFired
+    OrderModified --> TicketAcknowledged : reacknowledged
+    CourseFired --> DishReady : dishReady
+    DishReady --> CourseFired : nextCourse
+    DishReady --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
-    A[submitOrder] --> B[flagAllergen]
-    B --> C[acknowledgeTicket]
-    C --> D[fireNextCourse]
-    D --> E[markReady]
-    E --> F{More Courses?}
-    F -->|Yes| D
-    F -->|No| G[Complete]
-    C --> H{Modification?}
-    H -->|Yes| I[modifyOrder]
-    I --> C
+    A[submitOrder] --> B{Allergen?}
+    B -->|Yes| C[flagAllergen]
+    B -->|No| D[acknowledgeTicket]
+    C --> D
+    D --> E{Modification?}
+    E -->|Yes| F[modifyOrder]
+    F --> D
+    E -->|No| G[fireNextCourse]
+    G --> H[markReady]
+    H --> I{More Courses?}
+    I -->|Yes| G
+    I -->|No| J{Cancel Item?}
+    J -->|Yes| K[cancelItem]
+    K --> D
+    J -->|No| L[Complete]
 ```
 
 ## Actor Relationships

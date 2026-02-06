@@ -81,6 +81,35 @@ Taking customer orders involves receiving purchase requests from customers, veri
 | getPendingOrders | List orders received but not yet confirmed or fulfilled |
 | getOrderHistory | Retrieve past orders for a specific customer |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Order ||--|{ OrderLineItem : "contains"
+    Order ||--|| PriceQuote : "pricedBy"
+    Order ||--|| OrderConfirmation : "confirmedWith"
+    Order ||--|| FulfillmentRequest : "fulfilledVia"
+    OrderLineItem }o--|| ProductCatalog : "referencesItemIn"
+    PriceQuote }o--|| ProductCatalog : "calculatedFrom"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Received
+    Received --> AvailabilityCheck : orderReceived
+    AvailabilityCheck --> OutOfStock : itemsUnavailable
+    OutOfStock --> Received : backorderNotified
+    AvailabilityCheck --> Priced : availabilityChecked
+    Priced --> Confirming : pricingCalculated
+    Confirming --> PaymentAuth : orderConfirmed
+    PaymentAuth --> PaymentFailed : paymentDeclined
+    PaymentFailed --> PaymentAuth : retryPayment
+    PaymentAuth --> Fulfilled : paymentAuthorized
+    Fulfilled --> [*] : orderRoutedToFulfillment
+```
+
 ## Workflow
 
 ```mermaid

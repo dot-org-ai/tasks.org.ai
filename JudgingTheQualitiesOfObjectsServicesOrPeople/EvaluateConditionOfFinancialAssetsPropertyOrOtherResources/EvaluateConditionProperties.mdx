@@ -82,6 +82,33 @@ Property condition evaluation involves systematic inspection of building systems
 | getSystemConditions | Find component status by building system |
 | getForecastedMaintenance | Retrieve projected repair schedules |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ConditionReport ||--|{ InspectionFinding : documents
+    InspectionFinding ||--|| DeficiencyRating : "rated by"
+    InspectionFinding }o--|| BuildingSystem : "found in"
+    ConditionReport ||--o| MaintenanceForecast : generates
+    MaintenanceForecast ||--|{ LifecycleEstimate : includes
+    LifecycleEstimate }o--|| BuildingSystem : "projected for"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Scheduled : inspectionScheduled
+    Scheduled --> ExteriorDone : exteriorInspected
+    ExteriorDone --> InteriorDone : interiorInspected
+    InteriorDone --> SystemsDone : systemsEvaluated
+    SystemsDone --> DeficienciesLogged : deficienciesDocumented
+    DeficienciesLogged --> CostsEstimated : repairCostsEstimated
+    CostsEstimated --> ReportComplete : conditionReportGenerated
+    ReportComplete --> [*]
+    ReportComplete --> Scheduled : reInspection
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,8 +117,10 @@ graph TD
     B --> C[inspectInterior]
     C --> D[evaluateSystems]
     D --> E[documentDeficiencies]
-    E --> F[estimateRepairCosts]
-    F --> G[generateConditionReport]
+    E --> F{Critical Issues?}
+    F -->|Yes| G[estimateRepairCosts]
+    G --> H[generateConditionReport]
+    F -->|No| H
 ```
 
 ## Actor Relationships

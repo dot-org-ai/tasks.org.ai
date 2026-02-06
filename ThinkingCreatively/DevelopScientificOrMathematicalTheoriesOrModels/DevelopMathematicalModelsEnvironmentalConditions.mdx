@@ -81,6 +81,35 @@ Developing mathematical models of environmental conditions involves constructing
 | getSimulationRuns | Find simulation outputs by model, scenario, or time period |
 | getCalibrationMetrics | Retrieve goodness-of-fit statistics for model calibration results |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    EnvironmentalModel ||--|| ParameterSet : configuredBy
+    EnvironmentalModel ||--|{ SimulationRun : executedAs
+    EnvironmentalModel ||--|{ CalibrationResult : calibratedBy
+    EnvironmentalModel ||--|{ ForecastScenario : projects
+    ObservationDataset ||--|{ CalibrationResult : validatesAgainst
+    SimulationRun }o--|| ForecastScenario : produces
+    ParameterSet }o--|{ CalibrationResult : adjustedBy
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> DataAcquisition
+    DataAcquisition --> StructureDefined : dataAcquired
+    StructureDefined --> ParameterEstimation : modelStructureDefined
+    ParameterEstimation --> Simulating : parametersEstimated
+    Simulating --> Calibrating : simulationCompleted
+    Calibrating --> ParameterEstimation : calibration failed
+    Calibrating --> Forecasting : modelCalibrated
+    Forecasting --> Exported : forecastGenerated
+    Exported --> DataAcquisition : new data available
+    Exported --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -93,7 +122,10 @@ graph TD
     F -->|No| G[Adjust Parameters]
     G --> C
     F -->|Yes| H[generateForecast]
-    H --> I[exportResults]
+    H --> I{Forecast Reasonable?}
+    I -->|No| J[Review Model Structure]
+    J --> B
+    I -->|Yes| K[exportResults]
 ```
 
 ## Actor Relationships

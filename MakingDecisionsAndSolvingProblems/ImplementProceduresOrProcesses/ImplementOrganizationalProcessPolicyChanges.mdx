@@ -91,6 +91,36 @@ Implementing organizational process and policy changes involves planning, commun
 | getAdoptionMetrics | Retrieve adoption rates by department, change, or time period |
 | findNonCompliantUnits | Identify departments that have not adopted the change |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ChangeRequest ||--|| ImpactAssessment : "analyzed-by"
+    ChangeRequest ||--|| PolicyDocument : "produces"
+    ChangeRequest ||--|| RolloutPlan : "deployed-via"
+    RolloutPlan ||--|{ TrainingMaterial : "supported-by"
+    PolicyDocument ||--|| ComplianceRecord : "tracked-by"
+    ChangeRequest ||--|{ AdoptionMetric : "measured-by"
+    ProcessMap }o--|| ChangeRequest : "modified-by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Submitted
+    Submitted --> ImpactAnalysis : changeRequestSubmitted
+    ImpactAnalysis --> PolicyDrafting : impactAssessed
+    PolicyDrafting --> AwaitingApproval : policyDrafted
+    AwaitingApproval --> Planning : changeApproved
+    Planning --> Communication : rolloutPlanCreated
+    Communication --> Deployment : changeCommunicated
+    Deployment --> AdoptionTracking : changeDeployed
+    AdoptionTracking --> Communication : belowTarget
+    AdoptionTracking --> EffectivenessReview : adoptionThresholdReached
+    EffectivenessReview --> [*] : effectivenessReviewed
+```
+
 ## Workflow
 
 ```mermaid
@@ -98,14 +128,16 @@ graph TD
     A[submitChangeRequest] --> B[assessImpact]
     B --> C[draftPolicy]
     C --> D[approveChange]
-    D --> E[createRolloutPlan]
-    E --> F[communicateChange]
-    F --> G[deployChange]
-    G --> H[trackAdoption]
-    H --> I{Adoption Target Met?}
-    I -->|No| J[communicateChange]
-    J --> H
-    I -->|Yes| K[reviewEffectiveness]
+    D --> E{Approved?}
+    E -->|No| F[Revise Policy]
+    F --> C
+    E -->|Yes| G[createRolloutPlan]
+    G --> H[communicateChange]
+    H --> I[deployChange]
+    I --> J[trackAdoption]
+    J --> K{Adoption Target Met?}
+    K -->|No| H
+    K -->|Yes| L[reviewEffectiveness]
 ```
 
 ## Actor Relationships

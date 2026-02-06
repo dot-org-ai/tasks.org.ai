@@ -81,6 +81,36 @@ Disbursing funds from client accounts to creditors involves verifying payment ob
 | getPendingDisbursements | List disbursement requests awaiting authorization or execution |
 | getDisbursementHistory | Retrieve the complete payment history for a client or creditor |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    DisbursementRequest ||--|| ClientAccount : "drawsFrom"
+    DisbursementRequest ||--|| CreditorRecord : "paysTo"
+    DisbursementRequest ||--|| Authorization : "approvedBy"
+    DisbursementRequest ||--|| PaymentInstruction : "executedVia"
+    DisbursementLedger ||--|{ DisbursementRequest : "records"
+    PaymentInstruction }o--|| CreditorRecord : "routesTo"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Requested
+    Requested --> BalanceCheck : disbursementRequested
+    BalanceCheck --> InsufficientFunds : balanceInsufficient
+    InsufficientFunds --> [*]
+    BalanceCheck --> PendingAuth : balanceVerified
+    PendingAuth --> Requested : authorizationDenied
+    PendingAuth --> Executing : authorizationObtained
+    Executing --> Recorded : disbursementExecuted
+    Recorded --> Reconciled : disbursementReconciled
+    Reconciled --> [*]
+    Executing --> Reversed : disbursementReversed
+    Reversed --> [*]
+```
+
 ## Workflow
 
 ```mermaid

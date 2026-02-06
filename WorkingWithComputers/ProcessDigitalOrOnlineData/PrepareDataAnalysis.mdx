@@ -83,6 +83,34 @@ Preparing data for analysis involves extracting raw data from source systems, cl
 | findFailedJobs | List pipeline runs that encountered errors |
 | getDataCatalog | Browse available datasets by domain, format, or freshness |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    RawDataset ||--|{ TransformationRule : "processed by"
+    DataPipeline ||--|{ TransformationRule : "orchestrates"
+    DataPipeline ||--|{ DataQualityCheck : "validates with"
+    StagingTable ||--|| RawDataset : "holds"
+    AnalyticsDataset }o--|| DataPipeline : "produced by"
+    DataLineageRecord }o--|| AnalyticsDataset : "traces"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Extracted
+    Extracted --> Cleansed : dataCleansed
+    Cleansed --> Transformed : dataTransformed
+    Transformed --> QualityCheck : qualityCheckPassed
+    Transformed --> QualityFailed : qualityCheckFailed
+    QualityFailed --> Cleansed : fixDataIssues
+    QualityCheck --> Loaded : dataLoaded
+    Loaded --> Traced : lineageTraced
+    Traced --> Complete : pipelineCompleted
+    Complete --> [*]
+```
+
 ## Workflow
 
 ```mermaid

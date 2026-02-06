@@ -81,18 +81,50 @@ Vehicle glass replacement involves evaluating damaged automotive glass, removing
 | findInsuranceClaims | Retrieve pending or approved insurance claims for glass work |
 | getCalibrationRecords | Look up ADAS recalibration results for a specific vehicle |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    GlassPanel ||--|| DamageReport : "documented in"
+    GlassPanel ||--|| AdhesiveBead : "bonded with"
+    ReplacementOrder ||--|| GlassPanel : "replaces"
+    ReplacementOrder ||--o| InsuranceClaim : "covered by"
+    ReplacementOrder ||--o| CalibrationRecord : "requires"
+    DamageReport ||--|| ReplacementOrder : "generates"
+    CalibrationRecord ||--|| GlassPanel : "recalibrates for"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Intact
+    Intact --> DamageReported : glassDamageAssessed
+    DamageReported --> OrderCreated : replacementOrderCreated
+    OrderCreated --> GlassRemoved : glassPanelRemoved
+    GlassRemoved --> FrameReady : framePrepared
+    FrameReady --> GlassSet : glassPanelInstalled
+    GlassSet --> Recalibrating : adasRecalibrated
+    GlassSet --> SealCheck : no ADAS
+    Recalibrating --> SealCheck : sealVerified
+    SealCheck --> Intact
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
-    A[assessGlassDamage] --> B[createReplacementOrder]
-    B --> C[removeGlassPanel]
-    C --> D[prepareFrame]
-    D --> E[installGlassPanel]
-    E --> F{ADAS equipped?}
-    F -->|Yes| G[recalibrateAdas]
-    F -->|No| H[verifySealIntegrity]
-    G --> H
+    A[assessGlassDamage] --> B{Repairable with Resin?}
+    B -->|Yes| C[Repair Chip]
+    B -->|No| D[createReplacementOrder]
+    D --> E[removeGlassPanel]
+    E --> F[prepareFrame]
+    F --> G[installGlassPanel]
+    G --> H{ADAS equipped?}
+    H -->|Yes| I[recalibrateAdas]
+    H -->|No| J[verifySealIntegrity]
+    I --> J
+    C --> J
 ```
 
 ## Actor Relationships

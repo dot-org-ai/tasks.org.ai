@@ -79,20 +79,51 @@ Sharing sales-related and market information with colleagues involves distributi
 | getCompetitiveAlerts | Retrieve competitor notifications by company or time period |
 | getPipelineBySegment | Pull pipeline data filtered by market segment or deal stage |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MarketIntelligenceReport ||--|{ CustomerInsight : "aggregates"
+    MarketIntelligenceReport ||--|| PipelineSnapshot : includes
+    CompetitiveAlert }o--|| CustomerInsight : "triggered by"
+    WinLossAnalysis }o--|| PipelineSnapshot : "examines"
+    CustomerInsight }o--|| WinLossAnalysis : "informs"
+    MarketIntelligenceReport ||--o{ CompetitiveAlert : "may contain"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> InsightSubmitted
+    InsightSubmitted --> ReportCompiled : reportCompiled
+    ReportCompiled --> CompetitiveAlertIssued : competitiveAlertIssued
+    ReportCompiled --> ReportDistributed : reportDistributed
+    CompetitiveAlertIssued --> ReportDistributed : reportDistributed
+    ReportDistributed --> PipelineReviewed : pipelineReviewed
+    PipelineReviewed --> WinLossReviewCompleted : winLossReviewCompleted
+    PipelineReviewed --> DashboardUpdated : dashboardUpdated
+    WinLossReviewCompleted --> DashboardUpdated : dashboardUpdated
+    DashboardUpdated --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[submitInsight] --> B[compileReport]
-    B --> C[distributeReport]
-    C --> D[reviewPipeline]
-    D --> E{Notable Deal?}
-    E -->|Yes| F[conductWinLossReview]
-    E -->|No| G[updateDashboard]
-    F --> G
-    B --> H{Competitor Move?}
-    H -->|Yes| I[issueCompetitiveAlert]
-    I --> C
+    B --> C{Competitor Move?}
+    C -->|Yes| D[issueCompetitiveAlert]
+    C -->|No| E[distributeReport]
+    D --> E
+    E --> F[reviewPipeline]
+    F --> G{Notable Deal?}
+    G -->|Yes| H[conductWinLossReview]
+    G -->|No| I[updateDashboard]
+    H --> I
+    I --> J{More Insights?}
+    J -->|Yes| A
+    J -->|No| K[Complete]
 ```
 
 ## Actor Relationships

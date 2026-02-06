@@ -81,6 +81,34 @@ Providing escort or transportation involves receiving transport requests, dispat
 | getTripHistory | Look up completed trips for a passenger or vehicle |
 | getFleetStatus | Check current availability and location of transport vehicles |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TransportRequest ||--|| DriverAssignment : "fulfilled by"
+    DriverAssignment ||--|| Vehicle : "uses"
+    TransportRequest ||--|{ PassengerManifest : "lists passengers in"
+    TransportRequest ||--|| TripRecord : "documented in"
+    TripRecord ||--|| MileageLog : "tracked in"
+    Vehicle ||--|{ MileageLog : "accumulates"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Requested
+    Requested --> Assigned : driverAssigned
+    Assigned --> PickedUp : pickupConfirmed
+    Assigned --> Reassigned : driverUnavailable
+    Reassigned --> Assigned : newDriverAssigned
+    PickedUp --> InTransit : transportInProgress
+    InTransit --> Delivered : dropoffConfirmed
+    Delivered --> Logged : tripDetailsLogged
+    Logged --> Closed : transportRequestClosed
+    Closed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,7 +118,10 @@ graph TD
     C --> D[executeTransport]
     D --> E[confirmDropoff]
     E --> F[logTripDetails]
-    F --> G[closeTransportRequest]
+    F --> G{Trip Complete?}
+    G -->|Yes| H[closeTransportRequest]
+    G -->|No| I[Schedule Return Trip]
+    I --> A
 ```
 
 ## Actor Relationships

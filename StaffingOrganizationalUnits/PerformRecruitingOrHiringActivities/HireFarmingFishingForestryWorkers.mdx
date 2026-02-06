@@ -81,18 +81,47 @@ Hiring farming, fishing, or forestry workers involves sourcing candidates for ph
 | getCrewAssignments | Query crew rosters by location, supervisor, or date range |
 | getAuthorizationStatus | Check work authorization status for individual workers |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    JobRequisition ||--o{ WorkerApplication : "receives"
+    WorkerApplication ||--|| WorkAuthorization : "requires"
+    WorkerApplication ||--o| SeasonalContract : "offered via"
+    SeasonalContract ||--|| CrewAssignment : "assigned in"
+    CrewAssignment }o--|| SafetyCertification : "requires"
+    JobRequisition }o--|| SeasonalContract : "filled by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RequisitionCreated
+    RequisitionCreated --> CandidateSourced : candidateSourced
+    CandidateSourced --> ApplicationScreened : applicationScreened
+    ApplicationScreened --> AuthorizationVerified : workAuthorizationVerified
+    AuthorizationVerified --> CandidateSourced : candidateSourced
+    AuthorizationVerified --> OfferExtended : offerExtended
+    OfferExtended --> SafetyOnboarded : safetyOnboardingCompleted
+    SafetyOnboarded --> CrewAssigned : crewAssigned
+    CrewAssigned --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[createRequisition] --> B[sourceCandidate]
     B --> C[screenApplication]
-    C --> D[verifyWorkAuthorization]
-    D --> E{Authorized?}
-    E -->|Yes| F[extendOffer]
-    E -->|No| B
-    F --> G[completeSafetyOnboarding]
-    G --> H[assignToCrew]
+    C --> D{Qualified?}
+    D -->|No| B
+    D -->|Yes| E[verifyWorkAuthorization]
+    E --> F{Authorized?}
+    F -->|Yes| G[extendOffer]
+    F -->|No| B
+    G --> H[completeSafetyOnboarding]
+    H --> I[assignToCrew]
 ```
 
 ## Actor Relationships

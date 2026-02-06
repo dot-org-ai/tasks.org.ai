@@ -82,6 +82,34 @@ Legal dispute arbitration involves receiving formal claims, reviewing evidence a
 | getHearings | View scheduled or completed hearing sessions |
 | findAwards | Search issued awards by case, amount, or outcome |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ArbitrationCase ||--|| Claim : "initiated by"
+    ArbitrationCase ||--|| Response : "answered via"
+    ArbitrationCase ||--o{ EvidenceSubmission : "supported by"
+    ArbitrationCase ||--|| HearingSchedule : "governed by"
+    ArbitrationCase ||--|| Award : "resolved by"
+    ArbitrationCase ||--o{ Transcript : "recorded in"
+    HearingSchedule ||--o{ Transcript : "produces"
+    EvidenceSubmission ||--o{ Transcript : "referenced in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Filed : caseFiled
+    Filed --> ArbitratorAssigned : arbitratorAppointed
+    ArbitratorAssigned --> Scheduled : hearingScheduled
+    Scheduled --> EvidencePhase : evidenceSubmitted
+    EvidencePhase --> HearingInProgress : hearingConducted
+    HearingInProgress --> Deliberation : deliberationCompleted
+    Deliberation --> AwardIssued : awardIssued
+    AwardIssued --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,9 +117,13 @@ graph TD
     A[fileCase] --> B[appointArbitrator]
     B --> C[scheduleHearing]
     C --> D[submitEvidence]
-    D --> E[conductHearing]
-    E --> F[deliberate]
-    F --> G[issueAward]
+    D --> E{All Evidence Received?}
+    E -->|No| D
+    E -->|Yes| F[conductHearing]
+    F --> G{Additional Hearings Needed?}
+    G -->|Yes| F
+    G -->|No| H[deliberate]
+    H --> I[issueAward]
 ```
 
 ## Actor Relationships

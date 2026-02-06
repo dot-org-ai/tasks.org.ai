@@ -82,6 +82,36 @@ Processing customer bills and payments involves generating invoices, sending bil
 | findOverdueAccounts | Locate accounts with balances past their due date |
 | getReconciliationStatus | Check reconciliation state for a billing period |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Invoice ||--|| BillingStatement : "includedIn"
+    Invoice ||--o{ Payment : "paidBy"
+    Payment ||--|| PaymentMethod : "madeVia"
+    Invoice ||--o| CreditMemo : "adjustedBy"
+    AgingReport ||--|{ Invoice : "categorizes"
+    Payment }o--|| AgingReport : "reducesBalanceIn"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Invoiced
+    Invoiced --> Billed : invoiceGenerated
+    Billed --> AwaitingPayment : billingStatementSent
+    AwaitingPayment --> PaymentReceived : paymentReceived
+    PaymentReceived --> Applied : paymentApplied
+    Applied --> Reconciled : paymentsReconciled
+    Applied --> PartiallyPaid : balanceRemaining
+    PartiallyPaid --> AwaitingPayment : additionalBillingSent
+    AwaitingPayment --> Overdue : pastDue
+    Overdue --> Collections : overdueEscalated
+    Collections --> AwaitingPayment : paymentArranged
+    Reconciled --> [*]
+```
+
 ## Workflow
 
 ```mermaid

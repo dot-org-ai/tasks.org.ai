@@ -81,6 +81,34 @@ Planning production and operational procedures involves defining the sequence of
 | getCapacity | Check available machine hours and labor by work center and time period |
 | getQualityMetrics | Access yield, defect rate, and inspection results by production line |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ProductionOrder ||--|| ProcessSequence : "follows"
+    ProcessSequence ||--|{ WorkInstruction : "contains"
+    ProcessSequence ||--|{ QualityCheckpoint : "embeds"
+    ProductionOrder ||--|| BillOfMaterials : "consumes"
+    ProductionOrder }o--|| CapacityPlan : "scheduledWithin"
+    WorkInstruction ||--o{ QualityCheckpoint : "referencesAt"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Forecasting
+    Forecasting --> ProcessDesign : demandForecasted
+    ProcessDesign --> Documenting : processSequenceDefined
+    Documenting --> QualitySetup : workInstructionsCreated
+    QualitySetup --> Scheduling : qualityGatesEstablished
+    Scheduling --> Resourcing : productionScheduled
+    Resourcing --> Executing : resourcesAllocated
+    Executing --> Optimizing : reviewCycle
+    Optimizing --> ProcessDesign : processOptimized
+    Resourcing --> Scheduling : resourceConflict
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,9 +118,14 @@ graph TD
     C --> D[establishQualityGates]
     D --> E[scheduleProduction]
     E --> F[allocateResources]
-    F --> G{Execute Production}
-    G --> H[reviewAndOptimize]
-    H --> B
+    F --> G{Resources Available?}
+    G -->|No| H[Resolve Shortages]
+    H --> F
+    G -->|Yes| I[Execute Production]
+    I --> J[reviewAndOptimize]
+    J --> K{Targets Met?}
+    K -->|No| B
+    K -->|Yes| L[Continue Operations]
 ```
 
 ## Actor Relationships

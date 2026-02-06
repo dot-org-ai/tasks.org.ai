@@ -82,6 +82,38 @@ Installing programs onto computer-controlled equipment involves loading firmware
 | findOutdatedFirmware | List equipment running below the current program version |
 | getValidationReports | Query validation outcomes by equipment or program |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    FirmwarePackage ||--|| ControlProgram : "contains"
+    ControlProgram ||--|| EquipmentController : "installed on"
+    InstallationManifest ||--|{ FirmwarePackage : "lists"
+    InstallationManifest ||--|| EquipmentController : "targets"
+    ValidationReport }o--|| ControlProgram : "verifies"
+    RollbackImage }o--|| FirmwarePackage : "preserves prior"
+    DeploymentLog ||--|{ FirmwarePackage : "records"
+    DeploymentLog ||--|| EquipmentController : "tracks"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Prepared
+    Prepared --> Transferred : programTransferred
+    Transferred --> Activated : programActivated
+    Activated --> Validated : installationValidated
+    Activated --> Failed : installationFailed
+    Failed --> RolledBack : programRolledBack
+    RolledBack --> Prepared : diagnoseAndRetry
+    Validated --> Documented : documentInstallation
+    Documented --> InService : operational
+    InService --> Updated : firmwareUpdated
+    Updated --> Validated : revalidate
+    InService --> [*]
+```
+
 ## Workflow
 
 ```mermaid

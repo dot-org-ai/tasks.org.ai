@@ -81,19 +81,50 @@ Communicating safety or hazard information to others involves identifying workpl
 | getPendingActions | Find corrective actions that are still awaiting completion |
 | getAcknowledgmentStatus | Check which personnel have or have not acknowledged a safety alert |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    HazardReport ||--|| SafetyAlert : "triggers"
+    HazardReport ||--o| IncidentRecord : "documented in"
+    SafetyAlert ||--|{ AcknowledgmentLog : "confirmed via"
+    IncidentRecord ||--|{ CorrectiveAction : "requires"
+    SafetyDataSheet }o--|| HazardReport : "referenced in"
+    CorrectiveAction }o--|| IncidentRecord : "resolves"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> HazardReported
+    HazardReported --> SafetyAlertIssued : safetyAlertIssued
+    SafetyAlertIssued --> SafetyBriefingConducted : safetyBriefingConducted
+    SafetyBriefingConducted --> AcknowledgmentVerified : acknowledgmentVerified
+    AcknowledgmentVerified --> CorrectiveActionAssigned : correctiveActionAssigned
+    CorrectiveActionAssigned --> CorrectiveActionAssigned : followUp
+    CorrectiveActionAssigned --> IncidentLogged : incidentLogged
+    IncidentLogged --> SafetyCaseClosed : safetyCaseClosed
+    SafetyCaseClosed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
-    A[reportHazard] --> B[issueSafetyAlert]
-    B --> C[conductSafetyBriefing]
-    C --> D[verifyAcknowledgment]
-    D --> E[assignCorrectiveAction]
-    E --> F{Action Complete?}
-    F -->|No| G[Follow Up]
-    G --> E
-    F -->|Yes| H[logIncident]
-    H --> I[closeSafetyCase]
+    A[reportHazard] --> B{Severity?}
+    B -->|Critical| C[issueSafetyAlert]
+    B -->|Low| D[conductSafetyBriefing]
+    C --> D
+    D --> E[verifyAcknowledgment]
+    E --> F{All Acknowledged?}
+    F -->|No| D
+    F -->|Yes| G[assignCorrectiveAction]
+    G --> H{Action Complete?}
+    H -->|No| I[Follow Up]
+    I --> G
+    H -->|Yes| J[logIncident]
+    J --> K[closeSafetyCase]
 ```
 
 ## Actor Relationships

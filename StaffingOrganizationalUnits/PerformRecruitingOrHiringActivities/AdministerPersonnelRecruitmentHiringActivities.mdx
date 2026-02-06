@@ -86,6 +86,35 @@ Administering personnel recruitment and hiring activities involves overseeing th
 | findJobPostings | List active postings by position, channel, or date range |
 | getComplianceRecords | Retrieve EEOC/OFCCP audit trails by period or disposition |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    RecruitmentProgram ||--|{ JobPosting : "publishes"
+    RecruitmentProgram ||--|| RecruitmentBudget : "funded by"
+    RecruitmentProgram ||--o{ VendorContract : "staffed via"
+    RecruitmentProgram ||--|| ApplicantTrackingSystem : "managed in"
+    JobPosting }o--|| ApplicantTrackingSystem : "tracked in"
+    RecruitmentProgram ||--|| PipelineReport : "measured by"
+    RecruitmentProgram ||--o{ ComplianceAuditTrail : "audited in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ProgramDesigned
+    ProgramDesigned --> BudgetAllocated : budgetAllocated
+    BudgetAllocated --> VendorsOnboarded : vendorOnboarded
+    VendorsOnboarded --> ATSConfigured : atsConfigured
+    ATSConfigured --> PostingsPublished : jobPostingPublished
+    PostingsPublished --> PipelineMonitored : pipelineReviewed
+    PipelineMonitored --> PipelineMonitored : pipelineReviewed
+    PipelineMonitored --> ComplianceAudited : complianceAuditCompleted
+    ComplianceAudited --> ProgramDesigned : recruitmentProgramDesigned
+    ComplianceAudited --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -99,7 +128,9 @@ graph TD
     G -->|No| H[optimizeHiringProcess]
     H --> F
     G -->|Yes| I[auditRecruitmentCompliance]
-    I --> J[Continue Program]
+    I --> J{Compliant?}
+    J -->|No| H
+    J -->|Yes| K[Continue Program]
 ```
 
 ## Actor Relationships

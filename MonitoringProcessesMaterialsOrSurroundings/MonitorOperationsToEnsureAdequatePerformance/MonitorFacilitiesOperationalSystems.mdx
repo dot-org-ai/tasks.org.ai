@@ -82,6 +82,38 @@ Facilities operational systems monitoring involves continuous oversight of HVAC,
 | getWorkOrders | Search maintenance requests by priority or status |
 | getEnergyConsumption | Find utility usage by system or time period |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    FacilitySystem ||--|{ PerformanceMetric : "produces"
+    FacilitySystem ||--o{ SystemAlert : "triggers"
+    FacilitySystem ||--o{ EnergyConsumption : "tracked via"
+    SystemAlert ||--o{ WorkOrder : "generates"
+    PerformanceMetric ||--o{ SystemAlert : "may trigger"
+    WorkOrder }o--|| InspectionRecord : "documented in"
+    EnergyConsumption }o--|| PerformanceMetric : "derived from"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Monitoring
+    Monitoring --> MetricsGathered : performanceMonitored
+    MetricsGathered --> Normal : withinRange
+    MetricsGathered --> AnomalyFound : anomalyDetected
+    Normal --> EnergyOptimized : energyOptimized
+    AnomalyFound --> AlertResponded : alertResponded
+    AlertResponded --> WorkOrderCreated : workOrderCreated
+    AlertResponded --> Monitoring : minorIssue
+    WorkOrderCreated --> Monitoring : repairComplete
+    EnergyOptimized --> Reported : statusReported
+    Reported --> Monitoring : performanceMonitored
+    Normal --> Inspected : inspectionConducted
+    Inspected --> Monitoring : performanceMonitored
+```
+
 ## Workflow
 
 ```mermaid
@@ -95,6 +127,8 @@ graph TD
     F -->|No| H[Continue]
     G --> H
     D --> I[reportStatus]
+    H --> A
+    I --> A
 ```
 
 ## Actor Relationships

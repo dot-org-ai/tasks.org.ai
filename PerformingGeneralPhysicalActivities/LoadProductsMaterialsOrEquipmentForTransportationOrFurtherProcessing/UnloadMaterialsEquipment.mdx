@@ -81,6 +81,36 @@ Unloading materials or equipment involves scheduling inbound deliveries, assigni
 | findOpenDamageReports | Locate unresolved damage claims from recent deliveries |
 | getQuantityDiscrepancies | Find deliveries with shortages or overages |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    DeliveryAppointment ||--|| ReceivingOrder : "expects"
+    ReceivingOrder ||--|| ReceivingTally : "counted in"
+    ReceivingOrder ||--o{ DamageReport : "may generate"
+    ReceivingTally ||--|| ProofOfDelivery : "signed via"
+    ProofOfDelivery ||--|{ PutAwayDirective : "triggers"
+    DeliveryAppointment ||--|| ProofOfDelivery : "completed by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Scheduled
+    Scheduled --> CheckedIn : vehicleCheckedIn
+    CheckedIn --> Unloaded : itemsUnloaded
+    Unloaded --> Inspected : damageInspected
+    Inspected --> DamageFiled : damageFound
+    Inspected --> Tallied : quantityTallied
+    DamageFiled --> Tallied : quantityTallied
+    Tallied --> SignedOff : proofOfDeliverySigned
+    Tallied --> ShortageReported : discrepancyDetected
+    ShortageReported --> SignedOff : proofOfDeliverySigned
+    SignedOff --> PutAway : putAwayDirected
+    PutAway --> [*]
+```
+
 ## Workflow
 
 ```mermaid

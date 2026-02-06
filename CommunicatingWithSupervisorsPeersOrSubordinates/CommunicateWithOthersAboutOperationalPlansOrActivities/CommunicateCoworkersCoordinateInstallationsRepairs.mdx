@@ -79,18 +79,47 @@ Coordinating installations and repairs requires structured communication between
 | getCrewAvailability | Retrieve technician schedules and current assignments |
 | getPartsStatus | Check fulfillment status of outstanding parts requests |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    WorkOrder ||--|| Schedule : "timed by"
+    WorkOrder ||--|{ PartsRequest : "requires"
+    WorkOrder ||--|| SiteReport : "described in"
+    WorkOrder ||--|| CompletionRecord : "closed with"
+    WorkOrder ||--|{ CommunicationLog : "tracked in"
+    PartsRequest }o--|| Schedule : "affects"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> CrewAssigned
+    CrewAssigned --> JobDetailsShared : jobDetailsShared
+    JobDetailsShared --> ScheduleCoordinated : scheduleCoordinated
+    ScheduleCoordinated --> PartsRequested : partsRequested
+    PartsRequested --> ProgressUpdated : progressUpdated
+    ProgressUpdated --> IssueEscalated : issueEscalated
+    ProgressUpdated --> CompletionConfirmed : completionConfirmed
+    IssueEscalated --> ProgressUpdated : issueResolved
+    CompletionConfirmed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[assignCrew] --> B[shareJobDetails]
     B --> C[coordinateSchedule]
-    C --> D[requestParts]
-    D --> E[updateProgress]
-    E --> F{Issue?}
-    F -->|Yes| G[escalateIssue]
-    G --> E
-    F -->|No| H[confirmCompletion]
+    C --> D{Parts Needed?}
+    D -->|Yes| E[requestParts]
+    D -->|No| F[updateProgress]
+    E --> F
+    F --> G{Issue?}
+    G -->|Yes| H[escalateIssue]
+    H --> F
+    G -->|No| I[confirmCompletion]
 ```
 
 ## Actor Relationships

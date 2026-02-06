@@ -86,6 +86,37 @@ Performing human resources activities encompasses the day-to-day operations of a
 | getComplianceReports | Fetch compliance reports by type, period, or filing status |
 | getHeadcountAnalytics | Retrieve workforce counts and trends by department or role |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    EmployeeRecord ||--o{ HRTransaction : "changed via"
+    EmployeeRecord ||--o{ LeaveRequest : "submits"
+    EmployeeRecord ||--o{ GrievanceCase : "files"
+    EmployeeRecord ||--o{ AttendanceLog : "tracked in"
+    PositionRecord ||--o{ EmployeeRecord : "filled by"
+    HRTransaction }o--|| ComplianceReport : "audited in"
+    GrievanceCase }o--|| ComplianceReport : "documented in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RecordCreated
+    RecordCreated --> TransactionProcessed : hrTransactionProcessed
+    TransactionProcessed --> RecordUpdated : employeeRecordUpdated
+    TransactionProcessed --> LeaveProcessed : leaveRequestProcessed
+    TransactionProcessed --> GrievanceOpened : grievanceCaseOpened
+    GrievanceOpened --> GrievanceResolved : grievanceCaseResolved
+    RecordUpdated --> TransactionProcessed : hrTransactionProcessed
+    LeaveProcessed --> TransactionProcessed : hrTransactionProcessed
+    GrievanceResolved --> ComplianceReported : complianceReportGenerated
+    RecordUpdated --> ComplianceReported : complianceReportGenerated
+    LeaveProcessed --> ComplianceReported : complianceReportGenerated
+    ComplianceReported --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -99,7 +130,9 @@ graph TD
     E --> H[resolveGrievanceCase]
     F --> G
     H --> G
-    G --> I[generateComplianceReport]
+    G --> I{Data Accurate?}
+    I -->|No| F
+    I -->|Yes| J[generateComplianceReport]
 ```
 
 ## Actor Relationships

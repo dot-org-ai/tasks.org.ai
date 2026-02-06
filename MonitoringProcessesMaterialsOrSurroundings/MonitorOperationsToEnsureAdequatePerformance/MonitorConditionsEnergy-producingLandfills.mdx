@@ -82,6 +82,36 @@ Energy-producing landfill monitoring involves continuous assessment of methane g
 | getEmissions | Search air quality measurements by location or date |
 | getSafetyAlerts | Find hazardous conditions by type or severity |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    GasWell ||--|| CollectionSystem : "feeds into"
+    GasWell ||--|{ ProductionMetric : "measured by"
+    CollectionSystem ||--o{ MaintenanceRecord : "serviced via"
+    ProductionMetric ||--o{ SafetyAlert : "may trigger"
+    EnvironmentalReading ||--o{ SafetyAlert : "may trigger"
+    MaintenanceRecord }o--|| SafetyAlert : "resolves"
+    CollectionSystem ||--o{ EnvironmentalReading : "monitored via"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Monitoring
+    Monitoring --> GasTracked : gasProductionMonitored
+    GasTracked --> SystemAssessed : collectionSystemAssessed
+    SystemAssessed --> EmissionsChecked : emissionsMeasured
+    EmissionsChecked --> HazardFound : safetyHazardDetected
+    EmissionsChecked --> Optimizing : noHazard
+    HazardFound --> ServicePending : serviceScheduled
+    ServicePending --> Monitoring : serviceComplete
+    Optimizing --> Optimized : generationOptimized
+    Optimized --> Compliant : complianceReported
+    Compliant --> Monitoring : nextCycle
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,8 +122,9 @@ graph TD
     D -->|Yes| E[detectSafetyHazard]
     D -->|No| F[optimizeGeneration]
     E --> G[scheduleService]
-    F --> G
-    G --> H[reportCompliance]
+    F --> H[reportCompliance]
+    G --> H
+    H --> A
 ```
 
 ## Actor Relationships

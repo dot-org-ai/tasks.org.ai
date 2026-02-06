@@ -81,6 +81,34 @@ Developing operational methods or processes that use green materials or emphasiz
 | getCertificationStatus | Check certification validity for green materials in use |
 | findMethodsByMaterial | List operational methods using a specific green material |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    OperationalMethod ||--|{ GreenMaterial : uses
+    OperationalMethod ||--|{ MaterialSubstitution : applies
+    GreenMaterial ||--o| MaterialCertification : certifiedBy
+    MaterialSubstitution ||--|| LifecycleAssessment : evaluatedBy
+    MaterialSubstitution ||--|| QualityValidation : testedBy
+    QualityValidation }o--|| MaterialCertification : supports
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Inventoried
+    Inventoried --> ImpactAssessed : materialsInventoried
+    ImpactAssessed --> SubstitutionsFound : lifecycleAssessed
+    SubstitutionsFound --> Validating : substitutionsIdentified
+    Validating --> SubstitutionsFound : performanceValidated failed
+    Validating --> Redesigned : performanceValidated passed
+    Redesigned --> Certified : processRedesigned
+    Certified --> Deployed : materialsCertified
+    Deployed --> Inventoried : next cycle
+    Deployed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,10 +117,12 @@ graph TD
     B --> C[identifySubstitutions]
     C --> D[validatePerformance]
     D --> E{Quality Met?}
-    E -->|Yes| F[redesignProcess]
-    E -->|No| C
-    F --> G[certifyMaterials]
-    G --> H[deployGreenMethod]
+    E -->|No| F{Alternative Available?}
+    F -->|Yes| C
+    F -->|No| G[Keep Current Material]
+    E -->|Yes| H[redesignProcess]
+    H --> I[certifyMaterials]
+    I --> J[deployGreenMethod]
 ```
 
 ## Actor Relationships

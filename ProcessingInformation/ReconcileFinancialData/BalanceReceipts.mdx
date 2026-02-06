@@ -81,6 +81,36 @@ Balancing receipts involves counting and verifying all forms of payment received
 | getTallyByPaymentType | Break down receipt totals by cash, card, check, or other methods |
 | findUnbalancedSessions | Identify sessions with unresolved variances |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    CashDrawer ||--|{ Receipt : contains
+    CashDrawer ||--|| BalancingSession : "balanced in"
+    BalancingSession ||--|{ PaymentTally : produces
+    BalancingSession ||--o{ Overage : "may have"
+    BalancingSession ||--o{ Shortage : "may have"
+    BalancingSession ||--|| DepositSlip : "results in"
+    PaymentTally ||--o{ Overage : "may reveal"
+    PaymentTally ||--o{ Shortage : "may reveal"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> DrawerOpened
+    DrawerOpened --> Tallying : tallyReceipts
+    Tallying --> Comparing : receiptsTallied
+    Comparing --> Balanced : comparisonCompleted
+    Comparing --> VarianceFound : varianceRecorded
+    VarianceFound --> DepositPrep : recordVariance
+    Balanced --> DepositPrep : prepareDeposit
+    DepositPrep --> Closing : depositPrepared
+    Closing --> Reported : sessionClosed
+    Reported --> [*]
+```
+
 ## Workflow
 
 ```mermaid

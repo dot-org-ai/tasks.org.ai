@@ -86,6 +86,34 @@ Administering compensation and benefits programs involves designing pay structur
 | findMeritIncreases | List merit increases by performance rating, department, or period |
 | getBenefitsCosts | Retrieve benefits cost data by plan type, carrier, or period |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    PayStructure ||--o{ CompensationPackage : "defines bands for"
+    CompensationPackage ||--o{ MeritIncrease : "adjusted via"
+    BenefitsPlan ||--o{ BenefitsElection : "selected in"
+    RetirementPlan ||--o{ BenefitsElection : "elected via"
+    OpenEnrollment ||--|{ BenefitsElection : "collects"
+    CompensationPackage }o--|| PayStructure : "graded by"
+    BenefitsElection }o--|| CompensationPackage : "part of"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> PayStructureDefined
+    PayStructureDefined --> Benchmarked : compensationBenchmarked
+    Benchmarked --> PayStructureDefined : payStructureDefined
+    Benchmarked --> MeritApplied : meritIncreaseProcessed
+    MeritApplied --> BonusDisbursed : bonusProcessed
+    BonusDisbursed --> EnrollmentOpen : enrollmentOpened
+    EnrollmentOpen --> Enrolled : employeeEnrolled
+    Enrolled --> Reconciled : invoiceReconciled
+    Reconciled --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -99,7 +127,9 @@ graph TD
     F --> G[openEnrollment]
     G --> H[enrollEmployee]
     H --> I[reconcileBenefitsInvoice]
-    I --> J[generateCompensationReport]
+    I --> J{Discrepancies?}
+    J -->|Yes| I
+    J -->|No| K[generateCompensationReport]
 ```
 
 ## Actor Relationships

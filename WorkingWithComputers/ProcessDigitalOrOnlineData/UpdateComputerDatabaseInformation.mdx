@@ -83,6 +83,34 @@ Updating computer database information involves modifying, correcting, and maint
 | getDataQualityMetrics | Query accuracy, completeness, and freshness scores |
 | getPendingUpdates | List queued updates awaiting validation or approval |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    DatabaseRecord ||--|{ ChangeLog : "tracked in"
+    UpdateBatch ||--|{ DatabaseRecord : "modifies"
+    ValidationRule ||--|| DatabaseRecord : "constrains"
+    RollbackPoint ||--|| UpdateBatch : "protects"
+    DataSource ||--|{ UpdateBatch : "feeds"
+    DataQualityReport }o--|| ChangeLog : "summarizes"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RollbackSaved
+    RollbackSaved --> Validating : validateData
+    Validating --> Updated : recordUpdated
+    Validating --> Rejected : validationFailed
+    Rejected --> Validating : corrected
+    Updated --> Audited : auditChanges
+    Audited --> Complete : qualityOK
+    Audited --> RolledBack : updateRolledBack
+    RolledBack --> RollbackSaved
+    Complete --> [*]
+```
+
 ## Workflow
 
 ```mermaid

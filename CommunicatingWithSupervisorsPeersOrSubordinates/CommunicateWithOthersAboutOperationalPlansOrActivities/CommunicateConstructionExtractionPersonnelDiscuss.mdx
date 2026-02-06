@@ -80,6 +80,34 @@ Communicating with other construction or extraction personnel to discuss project
 | getSiteLogs | Look up daily site logs by date range or crew |
 | getChangeOrders | Find change orders by status, trade, or impact level |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ProjectPlan ||--|{ TradeSchedule : "sequenced in"
+    ProjectPlan ||--|{ DailyBriefing : "reviewed at"
+    DailyBriefing ||--|{ RequestForInformation : "may generate"
+    RequestForInformation ||--o| ChangeOrder : "may trigger"
+    ChangeOrder }o--|| TradeSchedule : "modifies"
+    SiteLog ||--|{ DailyBriefing : "recorded from"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> BriefingConducted
+    BriefingConducted --> SiteConditionReported : siteConditionReported
+    SiteConditionReported --> RFISubmitted : rfiSubmitted
+    SiteConditionReported --> DeliveryCoordinated : deliveryCoordinated
+    RFISubmitted --> RFIResolved : rfiResolved
+    RFIResolved --> DeliveryCoordinated : deliveryCoordinated
+    DeliveryCoordinated --> ChangeOrderIssued : changeOrderIssued
+    DeliveryCoordinated --> TradeScheduleUpdated : tradeScheduleUpdated
+    ChangeOrderIssued --> TradeScheduleUpdated : tradeScheduleUpdated
+    TradeScheduleUpdated --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -88,8 +116,9 @@ graph TD
     B --> C{Clarification Needed?}
     C -->|Yes| D[submitRFI]
     C -->|No| E[coordinateDelivery]
-    D --> F[rfiResolved]
-    F --> E
+    D --> F{RFI Resolved?}
+    F -->|Yes| E
+    F -->|No| D
     E --> G{Scope Change?}
     G -->|Yes| H[issueChangeOrder]
     G -->|No| I[updateTradeSchedule]

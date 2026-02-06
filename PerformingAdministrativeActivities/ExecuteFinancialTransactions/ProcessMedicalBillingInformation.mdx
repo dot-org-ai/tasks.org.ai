@@ -83,6 +83,37 @@ Processing medical billing information involves translating clinical services in
 | getPatientBalance | Check the outstanding balance on a patient account |
 | getRevenueByPeriod | Aggregate payments received over a specified date range |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Claim ||--|{ BillingCode : "codedWith"
+    Claim ||--o| RemittanceAdvice : "adjudicatedIn"
+    Claim ||--o| Denial : "rejectedAs"
+    Claim ||--|| PatientAccount : "billedTo"
+    PaymentPosting }o--|| PatientAccount : "appliedTo"
+    RemittanceAdvice ||--|| PaymentPosting : "settledVia"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Coding
+    Coding --> Submitted : servicesCoded
+    Submitted --> Adjudicating : claimSubmitted
+    Adjudicating --> Paid : claimAdjudicated
+    Adjudicating --> Denied : claimDenied
+    Paid --> Posted : paymentPosted
+    Posted --> PatientBilling : patientBalanceRemains
+    Posted --> [*] : fullySettled
+    Denied --> Investigation : investigating
+    Investigation --> Appealed : appealSubmitted
+    Appealed --> Adjudicating : resubmitted
+    Investigation --> PatientBilling : notAppealable
+    PatientBilling --> [*] : patientStatementGenerated
+```
+
 ## Workflow
 
 ```mermaid

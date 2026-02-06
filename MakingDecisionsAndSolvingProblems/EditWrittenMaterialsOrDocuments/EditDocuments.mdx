@@ -81,6 +81,35 @@ Editing documents involves reviewing written materials for clarity, accuracy, gr
 | getPendingReviews | Find documents awaiting editorial review or approval |
 | searchByAuthor | Locate documents by author, department, or content type |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Document ||--|{ Revision : "versioned-as"
+    Revision ||--|{ EditorialComment : "annotated-with"
+    Document ||--|| StyleGuide : "governed-by"
+    Document ||--|| ApprovalRecord : "approved-via"
+    Document ||--|| VersionHistory : "tracked-in"
+    EditorialComment }o--|| Revision : "applied-in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Submitted
+    Submitted --> InReview : documentSubmitted
+    InReview --> Commented : editorialCommentsAdded
+    Commented --> Revised : documentRevised
+    Revised --> Proofreading : documentRevised
+    Proofreading --> Revised : errorsFound
+    Proofreading --> AwaitingApproval : documentProofread
+    AwaitingApproval --> InReview : revisionRequested
+    AwaitingApproval --> Approved : documentApproved
+    Approved --> Published : documentPublished
+    Published --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,8 +120,12 @@ graph TD
     D --> E[proofreadDocument]
     E --> F{Errors Found?}
     F -->|Yes| D
-    F -->|No| G[approveDocument]
-    G --> H[publishDocument]
+    F -->|No| G{Approval Required?}
+    G -->|Yes| H[approveDocument]
+    G -->|No| I[publishDocument]
+    H --> J{Approved?}
+    J -->|No| B
+    J -->|Yes| I
 ```
 
 ## Actor Relationships

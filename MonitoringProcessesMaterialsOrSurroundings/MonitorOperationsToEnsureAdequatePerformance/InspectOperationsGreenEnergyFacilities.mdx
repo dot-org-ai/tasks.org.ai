@@ -82,6 +82,35 @@ Green energy facility inspection involves evaluating the operational performance
 | getComplianceRecords | Search environmental and safety documentation |
 | getIssues | Find maintenance problems by facility or severity |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    FacilityInspection ||--|{ PerformanceMetric : "evaluates"
+    FacilityInspection ||--o{ ComplianceRecord : "produces"
+    FacilityInspection ||--o{ MaintenanceIssue : "may identify"
+    PerformanceMetric }o--|| ProductionReport : "summarized in"
+    MaintenanceIssue ||--o{ OptimizationRecommendation : "may inform"
+    ComplianceRecord }o--|| FacilityInspection : "documented during"
+    ProductionReport ||--o{ OptimizationRecommendation : "drives"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Scheduled : inspectionScheduled
+    Scheduled --> PerformanceReviewed : performanceAssessed
+    PerformanceReviewed --> ComplianceChecked : complianceVerified
+    ComplianceChecked --> IssueFound : issueIdentified
+    ComplianceChecked --> Optimizing : noIssues
+    IssueFound --> MaintenancePending : maintenanceRequested
+    MaintenancePending --> Optimizing : maintenanceComplete
+    Optimizing --> Recommended : optimizationRecommended
+    Recommended --> Certified : operationCertified
+    Certified --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,8 +121,11 @@ graph TD
     D -->|Yes| E[identifyIssue]
     D -->|No| F[recommendOptimization]
     E --> G[requestMaintenance]
-    G --> F
-    F --> H[certifyOperation]
+    G --> H{Resolved?}
+    H -->|Yes| F
+    H -->|No| I[Escalate]
+    I --> F
+    F --> J[certifyOperation]
 ```
 
 ## Actor Relationships

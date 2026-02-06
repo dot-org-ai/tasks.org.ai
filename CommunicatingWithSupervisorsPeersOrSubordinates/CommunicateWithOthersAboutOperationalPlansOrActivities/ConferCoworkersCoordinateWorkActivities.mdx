@@ -78,6 +78,34 @@ Conferring with coworkers to coordinate work activities involves discussing task
 | getHandoffNotes | Retrieve pending handoff documentation by shift or team member |
 | getTeamStatus | View current progress across all active tasks for a team |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TaskAssignment ||--|{ StatusUpdate : "reported via"
+    TaskAssignment ||--|| WorkSchedule : "planned in"
+    TaskAssignment ||--o| ResourceAllocation : "requires"
+    HandoffNote }o--|| TaskAssignment : "documents"
+    WorkSchedule ||--o{ ResourceAllocation : "allocates"
+    StatusUpdate }o--|| HandoffNote : "feeds into"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> StandupConducted
+    StandupConducted --> TaskAssigned : taskAssigned
+    TaskAssigned --> UpdateShared : updateShared
+    UpdateShared --> ConflictResolved : conflictResolved
+    UpdateShared --> AssistanceRequested : assistanceRequested
+    ConflictResolved --> UpdateShared : statusUpdated
+    AssistanceRequested --> UpdateShared : helped
+    UpdateShared --> HandoffDocumented : handoffDocumented
+    HandoffDocumented --> TaskCompleted : taskCompleted
+    TaskCompleted --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,9 +117,11 @@ graph TD
     D -->|No| F{Need Help?}
     E --> C
     F -->|Yes| G[requestAssistance]
-    F -->|No| H[documentHandoff]
+    F -->|No| H{Shift Ending?}
     G --> C
-    H --> I[taskCompleted]
+    H -->|Yes| I[documentHandoff]
+    H -->|No| C
+    I --> J[taskCompleted]
 ```
 
 ## Actor Relationships

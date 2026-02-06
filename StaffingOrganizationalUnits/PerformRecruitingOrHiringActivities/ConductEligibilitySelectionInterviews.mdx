@@ -86,6 +86,34 @@ Conducting eligibility and selection interviews involves preparing structured in
 | getCandidateHistory | Fetch a candidate's complete interview history and outcomes |
 | getSelectionAnalytics | Retrieve selection rates, pass-through ratios, and diversity metrics |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    InterviewGuide ||--|{ InterviewSession : "used in"
+    InterviewSession ||--|{ CandidateResponse : "captures"
+    InterviewSession }o--|| InterviewPanel : "conducted by"
+    CandidateResponse ||--|| InterviewEvaluation : "scored in"
+    InterviewEvaluation }o--|| SelectionDecision : "informs"
+    EligibilityChecklist ||--o| InterviewSession : "gates"
+    InterviewPanel ||--|{ InterviewEvaluation : "produces"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> GuideCreated
+    GuideCreated --> EligibilityScreened : eligibilityScreened
+    EligibilityScreened --> Scheduled : interviewScheduled
+    Scheduled --> Conducted : interviewConducted
+    Conducted --> Evaluated : candidateEvaluated
+    Evaluated --> FeedbackConsolidated : feedbackConsolidated
+    Evaluated --> Conducted : interviewConducted
+    FeedbackConsolidated --> DecisionMade : selectionDecisionMade
+    DecisionMade --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -96,9 +124,11 @@ graph TD
     C -->|Yes| E[scheduleInterview]
     E --> F[conductInterview]
     F --> G[evaluateCandidate]
-    G --> H[consolidateFeedback]
-    H --> I[makeSelectionDecision]
-    I --> D
+    G --> H{All Panelists Done?}
+    H -->|No| G
+    H -->|Yes| I[consolidateFeedback]
+    I --> J[makeSelectionDecision]
+    J --> D
 ```
 
 ## Actor Relationships

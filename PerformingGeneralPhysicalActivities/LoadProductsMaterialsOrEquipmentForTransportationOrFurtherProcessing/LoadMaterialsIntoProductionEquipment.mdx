@@ -81,6 +81,36 @@ Loading materials into production equipment involves retrieving stock from wareh
 | getFirstArticleHistory | Retrieve first-article results by machine or product |
 | getConsumptionRates | Pull material usage rates by product or machine |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ProductionSchedule ||--|{ MaterialRequisition : "triggers"
+    MaterialRequisition ||--|| InfeedSystem : "loaded via"
+    InfeedSystem ||--|| FirstArticle : "produces"
+    FirstArticle ||--|| PartSpecification : "measured against"
+    ProductionSchedule ||--|| RunSheet : "tracked in"
+    MaterialRequisition ||--|| RunSheet : "consumed per"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Requisitioned
+    Requisitioned --> Verified : partNumberVerified
+    Requisitioned --> WrongMaterial : partMismatch
+    WrongMaterial --> Requisitioned : correctMaterialFetched
+    Verified --> InfeedLoaded : infeedLoaded
+    InfeedLoaded --> FirstArticleProduced : firstArticleCycled
+    FirstArticleProduced --> Approved : firstArticleApproved
+    FirstArticleProduced --> SetupAdjust : firstArticleRejected
+    SetupAdjust --> InfeedLoaded : reloaded
+    Approved --> InProduction : runInitiated
+    InProduction --> Logged : materialConsumptionLogged
+    Logged --> [*]
+```
+
 ## Workflow
 
 ```mermaid
