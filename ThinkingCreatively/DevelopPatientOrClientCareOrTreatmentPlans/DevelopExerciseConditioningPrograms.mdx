@@ -81,21 +81,54 @@ Developing exercise or conditioning programs involves designing structured physi
 | getProgressionHistory | View progression data for a program over time |
 | findProgramsByCondition | List exercise programs associated with a specific diagnosis |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ExerciseProgram ||--|| FitnessAssessment : basedOn
+    ExerciseProgram ||--|{ ExercisePrescription : contains
+    ExerciseProgram ||--|| ProgressionSchedule : follows
+    ExerciseProgram ||--|{ Contraindication : respects
+    ExerciseProgram ||--|{ OutcomeMeasure : trackedBy
+    ExercisePrescription }o--|| ProgressionSchedule : advances
+    FitnessAssessment }o--|| Contraindication : identifies
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Assessment
+    Assessment --> Screening : fitnessEvaluated
+    Screening --> ProgramDesign : contraindicationsIdentified
+    ProgramDesign --> Prescribed : programDesigned
+    Prescribed --> Progressive : exercisesPrescribed
+    Progressive --> Monitoring : progressionScheduled
+    Monitoring --> PhaseReview : phaseCompleted
+    PhaseReview --> ProgramDesign : goals not met
+    PhaseReview --> Discharged : outcomesAssessed
+    Monitoring --> Monitoring : continue phase
+    Discharged --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[evaluateFitness] --> B[identifyContraindications]
-    B --> C[designProgram]
-    C --> D[prescribeExercises]
-    D --> E[scheduleProgression]
-    E --> F[monitorAdherence]
-    F --> G{Phase Complete?}
-    G -->|Yes| H[assessOutcomes]
-    G -->|No| F
-    H --> I{Goals Met?}
-    I -->|No| C
-    I -->|Yes| J[Discharge]
+    B --> C{Contraindications Found?}
+    C -->|Yes| D[Modify Approach]
+    C -->|No| E[designProgram]
+    D --> E
+    E --> F[prescribeExercises]
+    F --> G[scheduleProgression]
+    G --> H[monitorAdherence]
+    H --> I{Phase Complete?}
+    I -->|No| H
+    I -->|Yes| J[assessOutcomes]
+    J --> K{Goals Met?}
+    K -->|No| E
+    K -->|Yes| L[Discharge]
 ```
 
 ## Actor Relationships

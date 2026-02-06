@@ -82,6 +82,34 @@ Visiting individuals in their homes to provide support or information involves s
 | getAssessments | Find home environment evaluations |
 | getConcerns | Identify reported safety or wellbeing issues |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    VisitSchedule ||--|| HomeAssessment : "begins with"
+    HomeAssessment ||--o{ SafetyIncident : "may identify"
+    ClientNeed ||--|| ServicePlan : "addressed by"
+    ServicePlan ||--|{ VisitSchedule : schedules
+    VisitSchedule ||--|| VisitReport : "documented in"
+    ClientNeed }o--|| VisitReport : "tracked in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Scheduled
+    Scheduled --> Assessed : environmentAssessed
+    Assessed --> Delivering : serviceDelivered
+    Assessed --> ConcernRaised : concernReported
+    Delivering --> Educating : clientEducated
+    Educating --> ResourcesConnected : resourcesIdentified
+    ResourcesConnected --> Documented : outcomesDocumented
+    ConcernRaised --> Documented : outcomesDocumented
+    Documented --> Scheduled : nextVisit
+    Documented --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,10 +118,13 @@ graph TD
     B --> C{Safe?}
     C -->|Yes| D[deliverService]
     C -->|No| E[reportConcerns]
-    D --> F[educateClient]
-    F --> G[identifyResources]
-    G --> H[documentOutcomes]
-    E --> H
+    E --> F{Immediate Risk?}
+    F -->|Yes| G[Contact Emergency]
+    F -->|No| D
+    D --> H[educateClient]
+    H --> I[identifyResources]
+    I --> J[documentOutcomes]
+    G --> J
 ```
 
 ## Actor Relationships

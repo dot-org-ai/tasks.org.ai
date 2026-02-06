@@ -82,19 +82,48 @@ Business presentation delivery involves creating, scheduling, and delivering for
 | getFeedback | Find evaluation data and audience responses |
 | getRecordings | List available presentation recordings |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Presentation ||--|| Slide Deck : "composed of"
+    Presentation ||--|{ Session : "delivered in"
+    Session ||--|| Audience : "attended by"
+    Session ||--o| Recording : "captured as"
+    Session ||--|{ Feedback : "evaluated by"
+    Recording }o--|| Audience : "shared with"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> PresentationCreated
+    PresentationCreated --> SessionScheduled : sessionScheduled
+    SessionScheduled --> AudienceInvited : audienceInvited
+    AudienceInvited --> PresentationDelivered : presentationDelivered
+    PresentationDelivered --> SessionRecorded : sessionRecorded
+    SessionRecorded --> FeedbackCollected : feedbackCollected
+    FeedbackCollected --> RecordingShared : recordingShared
+    FeedbackCollected --> PresentationCreated : revisionsNeeded
+    RecordingShared --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[createPresentation] --> B[scheduleSession]
     B --> C[inviteAudience]
-    C --> D[deliverPresentation]
-    D --> E[recordSession]
-    E --> F[collectFeedback]
-    F --> G{Feedback Positive?}
-    G -->|Yes| H[shareRecording]
-    G -->|No| I[Review and Revise]
-    H --> J[Complete]
+    C --> D{Attendance Confirmed?}
+    D -->|Yes| E[deliverPresentation]
+    D -->|No| C
+    E --> F[recordSession]
+    F --> G[collectFeedback]
+    G --> H{Feedback Positive?}
+    H -->|Yes| I[shareRecording]
+    H -->|No| J[createPresentation]
+    I --> K[Complete]
 ```
 
 ## Actor Relationships

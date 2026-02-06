@@ -82,6 +82,36 @@ Special needs program development involves assessing individual student capabili
 | listAccommodations | Enumerate modifications for a specific student |
 | getServiceLogs | Look up therapy and support session records |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    EligibilityDetermination ||--|| IndividualizedEducationProgram : qualifies
+    IndividualizedEducationProgram ||--|{ AccommodationPlan : includes
+    IndividualizedEducationProgram ||--o| BehaviorSupportPlan : mayInclude
+    IndividualizedEducationProgram ||--|{ ProgressReport : generates
+    IndividualizedEducationProgram ||--o| TransitionPlan : leads_to
+    ServiceDeliveryLog }o--|| IndividualizedEducationProgram : records
+    ProgressReport }o--|| AccommodationPlan : evaluates
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Referral
+    Referral --> Evaluation : eligibilityEvaluated
+    Evaluation --> GeneralEd : not eligible
+    Evaluation --> IEPDevelopment : eligible
+    IEPDevelopment --> Accommodated : iepDeveloped
+    Accommodated --> ServiceDelivery : accommodationsDesigned
+    ServiceDelivery --> Monitoring : servicesCoordinated
+    Monitoring --> IEPDevelopment : goals not met
+    Monitoring --> TransitionPlanning : progressMonitored
+    TransitionPlanning --> [*]
+    GeneralEd --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,12 +120,16 @@ graph TD
     B -->|No| C[General Education Supports]
     B -->|Yes| D[developIEP]
     D --> E[designAccommodations]
-    E --> F[planBehaviorSupport]
-    F --> G[coordinateServices]
-    G --> H[monitorProgress]
-    H --> I{Goals Met?}
-    I -->|No| D
-    I -->|Yes| J[planTransition]
+    E --> F{Behavioral Needs?}
+    F -->|Yes| G[planBehaviorSupport]
+    F -->|No| H[coordinateServices]
+    G --> H
+    H --> I[monitorProgress]
+    I --> J{Goals Met?}
+    J -->|No| D
+    J -->|Yes| K{Transition Age?}
+    K -->|Yes| L[planTransition]
+    K -->|No| I
 ```
 
 ## Actor Relationships

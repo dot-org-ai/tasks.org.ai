@@ -81,6 +81,33 @@ Customer comfort and safety assistance involves monitoring guest environments, r
 | findHazards | Search hazard reports by type or status |
 | getAccommodations | List accessibility arrangements for upcoming guests |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    GuestProfile ||--|{ ComfortRequest : submits
+    ComfortRequest ||--|| EnvironmentCheck : "triggers"
+    EnvironmentCheck ||--o| HazardReport : "may produce"
+    ComfortRequest ||--|| ServiceLog : "recorded in"
+    HazardReport ||--o| SafetyIncident : "escalates to"
+    GuestProfile ||--o{ AccessibilityAccommodation : requires
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RequestLogged
+    RequestLogged --> EnvironmentAssessed : environmentChecked
+    EnvironmentAssessed --> HazardIdentified : hazardReported
+    EnvironmentAssessed --> Resolving : noHazard
+    HazardIdentified --> Escalated : incidentEscalated
+    Resolving --> Resolved : requestResolved
+    Escalated --> Resolved : incidentHandled
+    Resolved --> ProfileUpdated : profileUpdated
+    ProfileUpdated --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,9 +116,12 @@ graph TD
     B --> C{Safety Hazard?}
     C -->|Yes| D[reportHazard]
     D --> E[escalateIncident]
-    C -->|No| F[resolveRequest]
-    F --> G[updateGuestProfile]
-    E --> G
+    C -->|No| F{Accommodation Needed?}
+    F -->|Yes| G[arrangeAccommodation]
+    F -->|No| H[resolveRequest]
+    G --> H
+    H --> I[updateGuestProfile]
+    E --> I
 ```
 
 ## Actor Relationships

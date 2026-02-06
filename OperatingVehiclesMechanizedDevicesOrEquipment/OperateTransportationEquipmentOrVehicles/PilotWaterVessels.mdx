@@ -84,6 +84,35 @@ Piloting water vessels involves planning transit routes through harbors, rivers,
 | getVesselLogs | Search vessel position and event records by voyage |
 | getBerthAvailability | Check dock assignments and availability at a port |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    VoyagePlan ||--o{ PilotageOrder : "requires"
+    VoyagePlan ||--|{ NavigationChart : "references"
+    VoyagePlan ||--o{ TidalSchedule : "incorporates"
+    VoyagePlan ||--|| BerthAssignment : "targets"
+    PilotageOrder ||--|| VesselLog : "generates"
+    VesselLog ||--o{ PilotReport : "summarizedIn"
+    BerthAssignment }o--|| VesselLog : "recordedIn"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Planning
+    Planning --> PilotageRequested : voyagePlanned
+    PilotageRequested --> PilotAboard : vesselBoarded
+    PilotAboard --> BridgeBriefed : bridgeExchangeCompleted
+    BridgeBriefed --> InTransit : navigateWaterway
+    InTransit --> InTransit : waypointPassed
+    InTransit --> Docked : vesselDocked
+    Docked --> Reported : pilotReportCompleted
+    Reported --> [*]
+    InTransit --> BridgeBriefed : weatherHold
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,9 +123,12 @@ graph TD
     D --> E[navigateWaterway]
     E --> F{Tugs Required?}
     F -->|Yes| G[coordinateTugs]
-    F -->|No| H[Dock]
+    F -->|No| H{Safe to Dock?}
     G --> H
-    H --> I[completePilotReport]
+    H -->|No| I[Hold Position]
+    I --> E
+    H -->|Yes| J[Dock]
+    J --> K[completePilotReport]
 ```
 
 ## Actor Relationships

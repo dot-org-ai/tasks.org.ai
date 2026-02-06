@@ -81,6 +81,35 @@ Developing treatment plans that use non-medical therapies involves designing the
 | findActiveCaseload | List all active non-medical treatment plans for a therapist |
 | getEvidenceBase | Retrieve research support for a modality and presenting concern |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TherapyPlan ||--|{ TherapyModality : employs
+    TherapyPlan ||--|| SessionSchedule : follows
+    TherapyPlan ||--|{ OutcomeMeasure : trackedBy
+    TherapyPlan ||--|| Dischargeplan : concludes
+    ClientAssessment }o--|| TherapyPlan : informs
+    TherapyModality }o--|| OutcomeMeasure : evaluatedBy
+    SessionSchedule }o--|| ClientAssessment : reassesses
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Assessment
+    Assessment --> ModalitySelection : clientAssessed
+    ModalitySelection --> GoalSetting : modalitiesSelected
+    GoalSetting --> Scheduling : goalsEstablished
+    Scheduling --> PlanCreation : scheduleDefinied
+    PlanCreation --> InTreatment : therapyPlanCreated
+    InTreatment --> OutcomeTracking : outcomesTracked
+    OutcomeTracking --> ModalitySelection : adjust approach
+    OutcomeTracking --> DischargePlanning : dischargeReady
+    DischargePlanning --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,8 +120,9 @@ graph TD
     D --> E[createTherapyPlan]
     E --> F[trackOutcomes]
     F --> G{Goals Met?}
-    G -->|No| H[Adjust Approach]
-    H --> B
+    G -->|No| H{Modality or Goal Issue?}
+    H -->|Modality| B
+    H -->|Goal| C
     G -->|Yes| I[planDischarge]
 ```
 

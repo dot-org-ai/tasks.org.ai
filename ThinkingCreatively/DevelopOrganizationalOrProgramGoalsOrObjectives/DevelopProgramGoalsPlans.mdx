@@ -81,6 +81,34 @@ Developing program goals and plans involves assessing organizational needs, defi
 | getNeedsAssessments | Find needs assessments by program or completion date |
 | getPerformanceMetrics | Search performance metrics by goal or program |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ProgramGoal ||--|{ PerformanceMetric : measuredBy
+    ProgramGoal }o--|| NeedsAssessment : informed_by
+    ProgramPlan ||--|{ Milestone : contains
+    ProgramPlan ||--|| ProgramGoal : achieves
+    StakeholderAlignment }o--|| ProgramGoal : endorses
+    PerformanceMetric }o--|| Milestone : tracks
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Assessment
+    Assessment --> GoalSetting : needsAssessmentCompleted
+    GoalSetting --> MetricDefinition : goalDefined
+    MetricDefinition --> Planning : performanceMetricsSet
+    Planning --> Alignment : programPlanCreated
+    Alignment --> GoalSetting : not aligned
+    Alignment --> Approved : stakeholdersAligned
+    Approved --> Active : programPlanApproved
+    Active --> GoalSetting : programGoalsRevised
+    Active --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,10 +118,13 @@ graph TD
     C --> D[createProgramPlan]
     D --> E[alignStakeholders]
     E --> F{Aligned?}
-    F -->|Yes| G[approveProgramPlan]
-    F -->|No| H[reviseProgramGoals]
-    H --> B
-    G --> I[Monitor Progress]
+    F -->|No| G{Goal or Plan Issue?}
+    G -->|Goal| B
+    G -->|Plan| D
+    F -->|Yes| H[approveProgramPlan]
+    H --> I[Monitor Progress]
+    I --> J{On Track?}
+    J -->|No| B
 ```
 
 ## Actor Relationships

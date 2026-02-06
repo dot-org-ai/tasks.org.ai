@@ -81,6 +81,35 @@ Treating animal injuries or illnesses involves examining animals, diagnosing con
 | findActiveProtocols | Locate ongoing treatment protocols by veterinarian or status |
 | getSurgicalRecords | Retrieve surgical records by procedure type or date range |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    AnimalPatient ||--|| Diagnosis : receives
+    Diagnosis ||--|| TreatmentProtocol : determines
+    TreatmentProtocol ||--|{ Prescription : includes
+    AnimalPatient ||--o| SurgicalRecord : "may have"
+    AnimalPatient ||--|| MedicalRecord : "documented in"
+    TreatmentProtocol }o--|| MedicalRecord : "recorded in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Examined
+    Examined --> Diagnosed : conditionDiagnosed
+    Diagnosed --> InSurgery : surgeryPerformed
+    Diagnosed --> OnMedication : treatmentPrescribed
+    InSurgery --> OnMedication : medicationAdministered
+    OnMedication --> Recovering : recoveryMonitored
+    Recovering --> Recovered : recoveryComplete
+    Recovering --> Referred : specialistReferralMade
+    Recovering --> OnMedication : additionalTreatment
+    Recovered --> [*]
+    Referred --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,7 +123,9 @@ graph TD
     F --> G[monitorRecovery]
     G --> H{Recovered?}
     H -->|Yes| I[Complete]
-    H -->|No| J[referToSpecialist]
+    H -->|No| J{Specialist Needed?}
+    J -->|Yes| K[referToSpecialist]
+    J -->|No| F
 ```
 
 ## Actor Relationships

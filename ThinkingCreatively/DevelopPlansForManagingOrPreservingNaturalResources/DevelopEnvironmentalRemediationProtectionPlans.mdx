@@ -84,6 +84,36 @@ Environmental remediation and protection planning involves site investigation, c
 | getComplianceStatus | Check regulatory approval status |
 | findMonitoringData | Query well sampling results by date or analyte |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    RemediationPlan ||--|| SiteAssessment : basedOn
+    RemediationPlan ||--|| RiskAssessment : addresses
+    RemediationPlan ||--|| RemedySelection : implements
+    RemediationPlan ||--|{ MonitoringWell : monitors
+    RemediationPlan ||--|{ ComplianceReport : produces
+    RemediationPlan ||--|| CostEstimate : budgets
+    SiteAssessment }o--|| RiskAssessment : informs
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> SiteInvestigation
+    SiteInvestigation --> RiskEvaluation : siteAssessmentCompleted
+    RiskEvaluation --> RemedyEvaluation : riskAssessed
+    RemedyEvaluation --> CostAnalysis : remedySelected
+    CostAnalysis --> PlanDevelopment : costsEstimated
+    PlanDevelopment --> RegulatoryReview : remediationPlanDeveloped
+    RegulatoryReview --> PlanDevelopment : not approved
+    RegulatoryReview --> Implementation : planApproved
+    Implementation --> Monitoring : remediationStarted
+    Monitoring --> SiteInvestigation : ongoing assessment
+    Monitoring --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,11 +121,13 @@ graph TD
     A[conductSiteAssessment] --> B[assessRisk]
     B --> C[selectRemedy]
     C --> D[estimateCosts]
-    D --> E[developRemediationPlan]
-    E --> F[submitForApproval]
-    F --> G{Approved?}
-    G -->|No| E
-    G -->|Yes| H[implementRemediation]
+    D --> E{Budget Feasible?}
+    E -->|No| C
+    E -->|Yes| F[developRemediationPlan]
+    F --> G[submitForApproval]
+    G --> H{Approved?}
+    H -->|No| F
+    H -->|Yes| I[implementRemediation]
 ```
 
 ## Actor Relationships

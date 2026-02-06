@@ -87,6 +87,40 @@ Testing patient nervous system functioning involves performing specialized neuro
 | getPatientHistory | Look up prior neurodiagnostic studies for a patient |
 | getEquipmentStatus | Check availability and calibration status of neurodiagnostic equipment |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TestOrder ||--|{ EEGRecording : "produces"
+    TestOrder ||--o{ NerveConductionResult : "produces"
+    TestOrder ||--o{ EMGResult : "produces"
+    TestOrder ||--o{ EvokedPotential : "produces"
+    EEGRecording ||--|| ElectrodeMontage : "uses"
+    EEGRecording ||--o{ ArtifactLog : "records"
+    ClinicalReport }o--|| TestOrder : "summarizes"
+    ClinicalReport }o--o{ NerveConductionResult : "interprets"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Ordered
+    Ordered --> Prepared : patientPrepared
+    Prepared --> EEGRecording : eegRecorded
+    Prepared --> NCSRecording : nerveStudyCompleted
+    Prepared --> EvokedRecording : evokedPotentialRecorded
+    NCSRecording --> EMGRecording : emgCompleted
+    EEGRecording --> Interpreting : recordingInterpreted
+    EMGRecording --> Interpreting : recordingInterpreted
+    EvokedRecording --> Interpreting : recordingInterpreted
+    Interpreting --> AbnormalFound : abnormalityDetected
+    Interpreting --> NormalFindings : recordingInterpreted
+    AbnormalFound --> Reported : recordingInterpreted
+    NormalFindings --> Reported : recordingInterpreted
+    Reported --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -100,7 +134,12 @@ graph TD
     D --> H[interpretRecording]
     G --> H
     F --> H
-    H --> I[issueReport]
+    H --> I{Abnormality Detected?}
+    I -->|Yes| J[issueReport]
+    I -->|No| J
+    J --> K{Additional Study Needed?}
+    K -->|Yes| B
+    K -->|No| L[Complete]
 ```
 
 ## Actor Relationships

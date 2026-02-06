@@ -87,6 +87,37 @@ Testing patient hearing involves conducting standardized audiological assessment
 | getCalibrationStatus | Check equipment calibration records and expiration dates |
 | getPatientHistory | Look up all prior audiological evaluations for a patient |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TestOrder ||--|{ Audiogram : "produces"
+    Audiogram ||--|{ PureToneResult : "contains"
+    Audiogram ||--o{ SpeechRecognitionScore : "includes"
+    Audiogram ||--o{ TympanogramResult : "includes"
+    ClinicalReport }o--|| Audiogram : "summarizes"
+    ClinicalReport ||--o{ TreatmentRecommendation : "recommends"
+    CalibrationRecord }o--|| TestOrder : "validates equipment for"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Ordered
+    Ordered --> Calibrated : equipmentCalibrated
+    Calibrated --> PureToneTesting : pureToneCompleted
+    PureToneTesting --> SpeechTesting : speechTestCompleted
+    SpeechTesting --> TympanometryTesting : tympanometryCompleted
+    TympanometryTesting --> AudiogramReady : audiogramGenerated
+    AudiogramReady --> Interpreted : resultsInterpreted
+    Interpreted --> HearingLoss : hearingLossDetected
+    Interpreted --> NormalFindings : resultsInterpreted
+    HearingLoss --> TreatmentPlanned : resultsInterpreted
+    TreatmentPlanned --> [*]
+    NormalFindings --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -100,6 +131,10 @@ graph TD
     G --> H{Hearing Loss?}
     H -->|Yes| I[recommendTreatment]
     H -->|No| J[Document Normal Findings]
+    I --> K{Additional Testing Needed?}
+    K -->|Yes| C
+    K -->|No| L[Complete]
+    J --> L
 ```
 
 ## Actor Relationships

@@ -82,22 +82,51 @@ Providing notifications to customers involves creating alerts, managing delivery
 | getPreferences | Find customer communication settings |
 | getDeliveryReceipts | Retrieve confirmation of notification delivery |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Notification ||--|| Template : "formatted from"
+    Notification ||--|{ DeliveryChannel : "sent via"
+    Notification ||--o| DeliveryReceipt : "confirmed by"
+    Notification }o--|| Schedule : "timed by"
+    Preference ||--|{ DeliveryChannel : "selects"
+    Notification }o--|| Preference : "respects"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> NotificationCreated
+    NotificationCreated --> DeliveryScheduled : deliveryScheduled
+    DeliveryScheduled --> NotificationSent : notificationSent
+    NotificationSent --> DeliveryTracked : deliveryTracked
+    DeliveryTracked --> NotificationSent : retryNeeded
+    DeliveryTracked --> [*]
+    NotificationCreated --> NotificationCancelled : notificationCancelled
+    DeliveryScheduled --> NotificationCancelled : notificationCancelled
+    NotificationCancelled --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
-    A[createNotification] --> B[createTemplate]
-    B --> C[scheduleDelivery]
-    C --> D{Send Time?}
-    D -->|Now| E[sendNotification]
-    D -->|Later| F[Wait]
-    F --> E
-    E --> G[trackDelivery]
-    G --> H{Engagement?}
-    H -->|Yes| I[Complete]
-    H -->|No| J{Retry?}
-    J -->|Yes| E
-    J -->|No| I
+    A[createNotification] --> B{Template Exists?}
+    B -->|No| C[createTemplate]
+    B -->|Yes| D[scheduleDelivery]
+    C --> D
+    D --> E{Send Time?}
+    E -->|Now| F[sendNotification]
+    E -->|Later| G[Wait]
+    G --> F
+    F --> H[trackDelivery]
+    H --> I{Delivered?}
+    I -->|Yes| J[Complete]
+    I -->|No| K{Retry?}
+    K -->|Yes| F
+    K -->|No| L[cancelNotification]
 ```
 
 ## Actor Relationships

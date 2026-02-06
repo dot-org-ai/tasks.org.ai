@@ -82,6 +82,38 @@ Facility environmental hazard testing evaluates buildings and sites for asbestos
 | getSamples | Fetch specimen collection records |
 | getReports | Access facility hazard documentation |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Facility ||--o{ Inspection : undergoes
+    Facility ||--o{ Hazard : "may contain"
+    Inspection ||--o{ Hazard : identifies
+    Hazard ||--o{ Sample : "tested via"
+    Hazard ||--o| RiskAssessment : "evaluated by"
+    RiskAssessment ||--o| RemediationPlan : "leads to"
+    Sample }o--|| Inspection : "collected during"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> InspectionPhase : facilityInspected
+    InspectionPhase --> HazardFound : hazardIdentified
+    InspectionPhase --> Clear : noHazardsDetected
+    HazardFound --> SampleCollection : sampleCollected
+    SampleCollection --> LabAnalysis : sampleAnalyzed
+    LabAnalysis --> Confirmed : hazardConfirmed
+    LabAnalysis --> InspectionPhase : negativeResult
+    Confirmed --> RiskEvaluation : riskAssessed
+    RiskEvaluation --> RemediationDesign : remediationPlanned
+    RemediationDesign --> RemediationExecution : workInProgress
+    RemediationExecution --> InspectionPhase : verificationNeeded
+    Clear --> Reported : reportGenerated
+    Reported --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,9 +126,12 @@ graph TD
     F --> G{Positive?}
     G -->|Yes| H[assessRisk]
     G -->|No| B
-    H --> I[planRemediation]
-    I --> J[generateReport]
-    E --> J
+    H --> I{Acceptable Risk?}
+    I -->|No| J[planRemediation]
+    I -->|Yes| K[Document & Monitor]
+    J --> L[generateReport]
+    E --> L
+    K --> L
 ```
 
 ## Actor Relationships

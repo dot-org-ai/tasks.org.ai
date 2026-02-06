@@ -84,6 +84,39 @@ Maintaining medical equipment and instruments involves inspecting, testing, cali
 | findOpenWorkOrders | Locate active maintenance requests by priority, technician, or device type |
 | getSafetyAlerts | Retrieve active safety alerts for devices in the facility inventory |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MedicalDevice ||--o{ MaintenanceWorkOrder : "serviced by"
+    MedicalDevice ||--o{ CalibrationCertificate : "calibrated with"
+    MedicalDevice ||--|| PreventiveMaintenancePlan : "follows"
+    MedicalDevice ||--|| AssetRecord : "tracked in"
+    MedicalDevice ||--o{ SafetyAlert : "affected by"
+    MaintenanceWorkOrder ||--o{ CalibrationCertificate : "produces"
+    SafetyAlert ||--o{ MaintenanceWorkOrder : "triggers"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> InService
+    InService --> WorkOrderOpen : workOrderProcessed
+    WorkOrderOpen --> UnderMaintenance : preventiveMaintenanceCompleted
+    UnderMaintenance --> Calibrating : deviceCalibrated
+    Calibrating --> SafetyTesting : safetyTestPassed
+    Calibrating --> SafetyTesting : testing
+    SafetyTesting --> RecordUpdate : safetyTestPassed
+    SafetyTesting --> FailureEscalated : safetyTestFailed
+    FailureEscalated --> UnderMaintenance : corrective repair
+    RecordUpdate --> AlertReview : safetyAlertApplied
+    RecordUpdate --> InService : returned to service
+    AlertReview --> InService : alert resolved
+    InService --> FailureEscalated : deviceFailureEscalated
+    InService → [*]
+```
+
 ## Workflow
 
 ```mermaid

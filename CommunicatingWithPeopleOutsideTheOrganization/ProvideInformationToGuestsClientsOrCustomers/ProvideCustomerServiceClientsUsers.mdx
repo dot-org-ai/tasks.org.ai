@@ -82,6 +82,34 @@ Providing customer service involves responding to inquiries, resolving issues, m
 | getInteractions | Find communication history by customer or channel |
 | getFeedback | Retrieve satisfaction ratings by period or rep |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Customer ||--|{ ServiceTicket : submits
+    ServiceTicket ||--|{ Interaction : "tracked in"
+    ServiceTicket ||--o| Escalation : "may require"
+    ServiceTicket ||--|| Resolution : "closed with"
+    Resolution ||--o| SatisfactionRating : "evaluated by"
+    Escalation }o--|| ServiceTicket : "transfers"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> TicketCreated
+    TicketCreated --> InquiryResponded : inquiryResponded
+    TicketCreated --> TicketEscalated : ticketEscalated
+    InquiryResponded --> IssueResolved : issueResolved
+    TicketEscalated --> IssueResolved : issueResolved
+    IssueResolved --> FeedbackCollected : feedbackCollected
+    FeedbackCollected --> CustomerFollowedUp : customerFollowedUp
+    FeedbackCollected --> [*]
+    CustomerFollowedUp --> IssueResolved : reopened
+    CustomerFollowedUp --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -95,7 +123,9 @@ graph TD
     F --> G{Satisfied?}
     G -->|No| H[followUpCustomer]
     G -->|Yes| I[Complete]
-    H --> E
+    H --> J{Resolved Now?}
+    J -->|Yes| I
+    J -->|No| D
 ```
 
 ## Actor Relationships

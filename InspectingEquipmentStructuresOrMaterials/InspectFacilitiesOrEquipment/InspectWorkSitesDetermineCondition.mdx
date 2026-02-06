@@ -87,6 +87,37 @@ Inspecting work sites to determine condition or necessary repairs involves condu
 | getWorkOrders | Access repair work orders by site, status, or priority |
 | getMaintenanceBacklog | View the prioritized list of outstanding repairs for a site |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SiteConditionReport ||--o{ ConditionRating : "references"
+    DeficiencyItem }o--|| SiteConditionReport : "contains"
+    SiteConditionReport ||--|{ RepairEstimate : "may have"
+    SiteConditionReport ||--o{ WorkOrder : "contains"
+    PhotoDocumentation }o--|| SiteConditionReport : "contains"
+    SiteConditionReport ||--|{ MaintenanceBacklog : "contains"
+    SiteConditionReport ||--o{ InspectionSchedule : "follows"
+    ConditionRating ||--o{ RepairEstimate : "may have"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> WalkthroughCompleted
+    WalkthroughCompleted --> ConditionRated : conditionRated
+    ConditionRated --> DeficiencyDocumented : deficiencyDocumented
+    DeficiencyDocumented --> RepairEstimated : repairEstimated
+    RepairEstimated --> RepairsPrioritized : repairsPrioritized
+    RepairsPrioritized --> WorkOrderGenerated : workOrderGenerated
+    WorkOrderGenerated --> ReportCompiled : reportCompiled
+    ReportCompiled --> FollowUpScheduled : followUpScheduled
+    RepairsPrioritized --> NeedsReview : repairsPrioritized
+    NeedsReview --> RepairEstimated : repairEstimated
+    FollowUpScheduled --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -98,6 +129,9 @@ graph TD
     E --> F[generateWorkOrder]
     F --> G[compileReport]
     G --> H[scheduleFollowUp]
+    H --> Z{Quality Check?}
+    Z -->|Pass| ZZ[Complete]
+    Z -->|Fail| E
 ```
 
 ## Actor Relationships

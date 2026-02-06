@@ -82,6 +82,37 @@ Equipment output measurement collects quantitative and qualitative data from ope
 | getDowntime | Fetch non-productive time records |
 | getReports | Access output summaries by period or department |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Equipment ||--o{ OutputMeasurement : produces
+    Equipment ||--o{ ProductionBatch : runs
+    ProductionBatch ||--|{ OutputMeasurement : contains
+    OutputMeasurement ||--o| PerformanceMetric : "rolls up to"
+    OutputMeasurement ||--o| QualityMetric : "rolls up to"
+    PerformanceMetric }o--|| EfficiencyReport : "included in"
+    QualityMetric }o--|| EfficiencyReport : "included in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Capturing : outputCaptured
+    Capturing --> QualityChecked : qualityMeasured
+    QualityChecked --> EfficiencyComputed : efficiencyCalculated
+    EfficiencyComputed --> DowntimeLogged : downtimeRecorded
+    DowntimeLogged --> Aggregated : metricsAggregated
+    Aggregated --> Compared : baselineCompared
+    Compared --> Normal : withinTolerance
+    Compared --> Alert : varianceDetected
+    Alert --> Aggregated : correctionApplied
+    Normal --> Reported : reportGenerated
+    Reported --> [*]
+    Reported --> Capturing : nextPeriod
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,9 +123,12 @@ graph TD
     D --> E[aggregateMetrics]
     E --> F[compareBaseline]
     F --> G{Variance?}
-    G -->|Significant| H[Alert]
+    G -->|Significant| H[Alert & Investigate]
     G -->|Normal| I[generateReport]
-    H --> I
+    H --> J{Root Cause Found?}
+    J -->|Yes| K[Apply Correction]
+    J -->|No| I
+    K --> A
 ```
 
 ## Actor Relationships

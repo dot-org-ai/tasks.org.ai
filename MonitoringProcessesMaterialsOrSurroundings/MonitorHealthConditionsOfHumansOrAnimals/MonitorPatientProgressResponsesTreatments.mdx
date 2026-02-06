@@ -82,6 +82,36 @@ Monitoring patient progress and treatment responses involves evaluating clinical
 | getAdverseReactions | Query documented side effects filtered by treatment, severity, or time period |
 | findUpcomingMilestones | Locate patients approaching their next treatment evaluation checkpoint |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TreatmentPlan ||--|{ TreatmentMilestone : "defines"
+    TreatmentPlan ||--o{ ProgressNote : "documented via"
+    TreatmentPlan ||--|| BaselineAssessment : "starts with"
+    ProgressNote ||--o{ OutcomeMeasure : "includes"
+    ProgressNote ||--o{ AdverseReaction : "may document"
+    TreatmentMilestone }o--|| OutcomeMeasure : "evaluated by"
+    BaselineAssessment ||--o{ OutcomeMeasure : "establishes"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> BaselineRecorded : baselineRecorded
+    BaselineRecorded --> InProgress : progressAssessed
+    InProgress --> Responding : milestoneReached
+    InProgress --> NotResponding : adverseReactionLogged
+    Responding --> GoalMet : treatmentGoalMet
+    NotResponding --> PlanAdjusted : treatmentPlanAdjusted
+    PlanAdjusted --> InProgress : progressAssessed
+    Responding --> InProgress : progressAssessed
+    GoalMet --> Completed : allGoalsMet
+    InProgress --> ConsultReferred : consultationRequested
+    ConsultReferred --> PlanAdjusted : treatmentPlanAdjusted
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,7 +122,10 @@ graph TD
     C -->|No| E[adjustTreatmentPlan]
     D -->|Yes| F[Document Completion]
     D -->|No| G[scheduleFollowUp]
-    E --> G
+    E --> H{Specialist Needed?}
+    H -->|Yes| I[requestConsultation]
+    H -->|No| G
+    I --> G
     G --> B
 ```
 

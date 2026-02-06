@@ -80,6 +80,33 @@ Estimating cost and material requirements involves determining the quantities of
 | getHistoricalCosts | Retrieve actual cost data from similar completed projects |
 | getSupplierQuotes | Query current pricing from suppliers by material category |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    CostEstimate ||--|{ MaterialSchedule : "itemizes"
+    MaterialSchedule ||--o{ PriceComparison : "evaluated-by"
+    PriceComparison ||--|{ UnitRate : "contains"
+    CostEstimate ||--|| ContingencyAllowance : "includes"
+    CostEstimate ||--|| CostBaseline : "approved-as"
+    MaterialSchedule }o--|| UnitRate : "priced-at"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ScopeDefinition
+    ScopeDefinition --> QuantitiesCalculated : estimateScopeDefined
+    QuantitiesCalculated --> PricingPhase : materialQuantitiesCalculated
+    PricingPhase --> RateAnalysis : supplierPricingObtained
+    RateAnalysis --> ContingencyAdded : unitRatesAnalyzed
+    ContingencyAdded --> BudgetReview : contingencyApplied
+    BudgetReview --> QuantitiesCalculated : overBudget
+    BudgetReview --> Approved : budgetReconciled
+    Approved --> [*] : costBaselineApproved
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,9 +117,10 @@ graph TD
     D --> E[applyContingency]
     E --> F[reconcileWithBudget]
     F --> G{Within Budget?}
-    G -->|No| H[Value Engineer]
-    H --> B
-    G -->|Yes| I[approveCostBaseline]
+    G -->|No| H{Value Engineer?}
+    H -->|Yes| B
+    H -->|Request More Funds| I[reconcileWithBudget]
+    G -->|Yes| J[approveCostBaseline]
 ```
 
 ## Actor Relationships

@@ -78,6 +78,35 @@ Relaying information between personnel involves receiving communications from on
 | getUnacknowledged | List messages that have not yet been confirmed as received |
 | getHandoffHistory | Retrieve handoff records for a specific shift, team, or date |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Message ||--o{ AcknowledgmentRecord : "confirmed by"
+    Message }o--|| DistributionList : "sent to"
+    Directive ||--|{ AcknowledgmentRecord : "requires"
+    Handoff ||--o{ Message : "contains"
+    Handoff ||--o{ Directive : "includes"
+    DistributionList ||--o{ Directive : "routes"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Queued
+    Queued --> InTransit : messageRelayed
+    InTransit --> Delivered : receiptConfirmed
+    InTransit --> Failed : deliveryFailed
+    Failed --> InTransit : messageRelayed
+    Failed --> Escalated : messageEscalated
+    Escalated --> InTransit : messageRelayed
+    Delivered --> HandedOff : handoffCompleted
+    Delivered --> Broadcast : broadcastSent
+    HandedOff --> [*]
+    Broadcast --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,7 +118,11 @@ graph TD
     E --> B
     D --> F{Shift Change?}
     F -->|Yes| G[logHandoff]
-    F -->|No| H[broadcastUpdate]
+    F -->|No| H{Broadcast Needed?}
+    H -->|Yes| I[broadcastUpdate]
+    H -->|No| J[Complete]
+    G --> J
+    I --> J
 ```
 
 ## Actor Relationships

@@ -82,6 +82,36 @@ Developing medical treatment plans involves formulating clinical care protocols 
 | getPendingOrders | Retrieve procedures and labs that have been ordered but not completed |
 | findGuidelineUpdates | Check for updated clinical guidelines relevant to a treatment plan |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MedicalTreatmentPlan ||--|| Diagnosis : addresses
+    MedicalTreatmentPlan ||--|{ MedicationOrder : prescribes
+    MedicalTreatmentPlan ||--|{ ProcedureOrder : schedules
+    MedicalTreatmentPlan ||--|| MonitoringProtocol : defines
+    ClinicalGuideline }o--|| MedicalTreatmentPlan : informs
+    MedicationOrder }o--|| MonitoringProtocol : trackedBy
+    Diagnosis }o--|| ClinicalGuideline : references
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> HistoryReview
+    HistoryReview --> DiagnosisConfirmation : historyReviewed
+    DiagnosisConfirmation --> MedicationSelection : diagnosisConfirmed
+    MedicationSelection --> ProcedureOrdering : medicationsSelected
+    ProcedureOrdering --> MonitoringSetup : proceduresOrdered
+    MonitoringSetup --> Documentation : monitoringDefined
+    Documentation --> ConsentProcess : planDocumented
+    ConsentProcess --> MedicationSelection : consent refused
+    ConsentProcess --> Active : consentObtained
+    Active --> HistoryReview : periodic reassessment
+    Active --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -93,8 +123,10 @@ graph TD
     E --> F[documentPlan]
     F --> G[obtainInformedConsent]
     G --> H{Consent Given?}
-    H -->|Yes| I[Activate Plan]
-    H -->|No| C
+    H -->|No| I{Alternative Approach?}
+    I -->|Yes| C
+    I -->|No| J[Document Refusal]
+    H -->|Yes| K[Activate Plan]
 ```
 
 ## Actor Relationships

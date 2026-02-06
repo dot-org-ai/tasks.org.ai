@@ -81,6 +81,34 @@ Establishing work standards involves analyzing job tasks, measuring output rates
 | listQualityThresholds | Enumerate quality benchmarks by process |
 | getComplianceData | Look up performance-versus-standard reports |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    WorkStandard ||--|| TimeStudy : basedOn
+    WorkStandard ||--|{ QualityThreshold : defines
+    WorkStandard ||--|| StandardOperatingProcedure : documents
+    WorkStandard ||--|{ ProductivityMetric : measures
+    ComplianceReport }o--|| WorkStandard : evaluates
+    ProductivityMetric }o--|| TimeStudy : derivedFrom
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> TaskAnalysis
+    TaskAnalysis --> TimeStudyPhase : taskRequirementsAnalyzed
+    TimeStudyPhase --> ThresholdSetting : timeStudyConducted
+    ThresholdSetting --> Documentation : qualityThresholdsDefined
+    Documentation --> WorkforceValidation : standardsDocumented
+    WorkforceValidation --> TimeStudyPhase : not feasible
+    WorkforceValidation --> Published : workforceValidated
+    Published --> Monitored : standardsPublished
+    Monitored --> TaskAnalysis : process changes
+    Monitored --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,9 +118,13 @@ graph TD
     C --> D[documentStandards]
     D --> E[validateWithWorkforce]
     E --> F{Feasible?}
-    F -->|No| B
-    F -->|Yes| G[publishStandards]
-    G --> H[monitorCompliance]
+    F -->|No| G{Threshold Issue?}
+    G -->|Yes| C
+    G -->|No| B
+    F -->|Yes| H[publishStandards]
+    H --> I[monitorCompliance]
+    I --> J{Compliance Below 85%?}
+    J -->|Yes| D
 ```
 
 ## Actor Relationships

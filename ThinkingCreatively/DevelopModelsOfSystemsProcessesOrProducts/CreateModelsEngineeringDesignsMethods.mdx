@@ -81,6 +81,35 @@ Creating models of engineering designs or methods involves translating requireme
 | getValidationReports | Find validation records by model or compliance status |
 | findDesignIterations | Search version history for a given engineering model |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    EngineeringModel ||--|| DesignSpecification : satisfies
+    EngineeringModel ||--|{ SimulationRun : executes
+    EngineeringModel ||--|{ DesignIteration : versions
+    EngineeringModel ||--|{ ParameterSet : configuredWith
+    SimulationRun }o--|| ParameterSet : uses
+    ValidationReport }o--|| SimulationRun : analyzes
+    DesignIteration }o--|| ValidationReport : informs
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RequirementCapture
+    RequirementCapture --> ModelCreation : designRequirementsCaptured
+    ModelCreation --> ParameterSetup : engineeringModelCreated
+    ParameterSetup --> Simulation : parametersConfigured
+    Simulation --> Analysis : simulationCompleted
+    Analysis --> ModelCreation : does not meet spec
+    Analysis --> Validation : resultsAnalyzed
+    Validation --> ModelCreation : validation issues
+    Validation --> Released : designValidated
+    Released --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,10 +119,13 @@ graph TD
     C --> D[runSimulation]
     D --> E[analyzeResults]
     E --> F{Meets Spec?}
-    F -->|Yes| G[validateDesign]
-    F -->|No| H[Iterate Model]
-    H --> B
-    G --> I[releaseDesign]
+    F -->|No| G{Parameter or Model Issue?}
+    G -->|Parameters| C
+    G -->|Model| B
+    F -->|Yes| H[validateDesign]
+    H --> I{Validated?}
+    I -->|No| B
+    I -->|Yes| J[releaseDesign]
 ```
 
 ## Actor Relationships

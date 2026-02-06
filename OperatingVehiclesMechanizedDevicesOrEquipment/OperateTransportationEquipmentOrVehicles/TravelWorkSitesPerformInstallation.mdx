@@ -81,6 +81,35 @@ Traveling to work sites for installation, repair, or maintenance involves dispat
 | getRouteStatus | Check progress of a planned route including completed and pending stops |
 | findAvailableParts | Search inventory for parts required by a specific work order |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    WorkOrder ||--|| SiteLocation : "targets"
+    WorkOrder ||--o{ PartsKit : "requires"
+    Route ||--|{ WorkOrder : "includes"
+    ServiceVehicle ||--|| Route : "follows"
+    WorkOrder ||--|| ServiceReport : "produces"
+    ServiceVehicle ||--o{ PartsKit : "carries"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Assigned
+    Assigned --> Dispatched : technicianDispatched
+    Dispatched --> OnSite : arrivalConfirmed
+    OnSite --> InProgress : serviceStarted
+    InProgress --> Completed : serviceCompleted
+    InProgress --> NeedsParts : partsMissing
+    NeedsParts --> Dispatched : rescheduled
+    Completed --> Closed : workOrderClosed
+    Closed --> Dispatched : moreStops
+    Closed --> Returned : technicianReturned
+    Returned --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -88,11 +117,14 @@ graph TD
     A[assignWorkOrder] --> B[planRoute]
     B --> C[dispatchTechnician]
     C --> D[confirmArrival]
-    D --> E[performService]
-    E --> F{More Stops?}
-    F -->|Yes| C
-    F -->|No| G[completeWorkOrder]
-    G --> H[returnToBase]
+    D --> E{Parts Available?}
+    E -->|No| F[Request Parts]
+    F --> C
+    E -->|Yes| G[performService]
+    G --> H{More Stops?}
+    H -->|Yes| C
+    H -->|No| I[completeWorkOrder]
+    I --> J[returnToBase]
 ```
 
 ## Actor Relationships

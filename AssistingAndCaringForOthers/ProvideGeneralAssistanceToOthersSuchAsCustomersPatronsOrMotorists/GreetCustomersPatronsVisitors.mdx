@@ -79,6 +79,32 @@ Customer and visitor greeting encompasses welcoming individuals upon arrival, ve
 | getWaitList | View the current guest queue for a location |
 | findPasses | Search issued badges by visitor name or date |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    VisitorRecord ||--o| Appointment : "linked to"
+    VisitorRecord ||--o| BadgePass : receives
+    VisitorRecord ||--|| CheckInEvent : generates
+    WaitList ||--|{ VisitorRecord : queues
+    Appointment }o--|| ServiceDirectory : "routed via"
+    CheckInEvent }o--|| ServiceDirectory : "logged in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> CheckedIn
+    CheckedIn --> AppointmentVerified : appointmentVerified
+    CheckedIn --> WaitListed : waitListUpdated
+    AppointmentVerified --> PassIssued : passIssued
+    WaitListed --> PassIssued : passIssued
+    PassIssued --> HostAlerted : hostNotified
+    HostAlerted --> Routed : guestRouted
+    Routed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -88,8 +114,10 @@ graph TD
     C -->|Yes| D[issuePass]
     C -->|No| E[addToWaitList]
     D --> F[notifyHost]
-    F --> G[routeGuest]
     E --> F
+    F --> G{Host Available?}
+    G -->|Yes| H[routeGuest]
+    G -->|No| E
 ```
 
 ## Actor Relationships

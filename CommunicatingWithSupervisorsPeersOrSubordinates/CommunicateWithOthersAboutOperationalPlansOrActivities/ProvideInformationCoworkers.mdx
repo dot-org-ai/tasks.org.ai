@@ -82,6 +82,36 @@ Providing information to coworkers involves sharing operational updates, distrib
 | getAnnouncements | Find team announcements by date or channel |
 | getKnowledgeArticles | Retrieve knowledge base entries by topic or author |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    InformationUpdate ||--o{ DistributionList : "targets"
+    InformationUpdate ||--o{ ReferenceDocument : "references"
+    Inquiry ||--|{ Response : "receives"
+    KnowledgeArticle ||--o{ ReferenceDocument : "incorporates"
+    DistributionList }o--|| InformationUpdate : "subscribes to"
+    Inquiry }o--|| KnowledgeArticle : "resolved by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Shared : updateShared
+    Shared --> Announced : announcementPosted
+    Announced --> InquiryReceived : inquiryResponded
+    InquiryReceived --> Responded : inquiryResponded
+    Responded --> Announced : announcementPosted
+    Shared --> Documented : knowledgeBaseUpdated
+    Announced --> Documented : knowledgeBaseUpdated
+    Responded --> Documented : knowledgeBaseUpdated
+    Documented --> Forwarded : communicationForwarded
+    Forwarded --> [*]
+    Documented --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,9 +121,15 @@ graph TD
     C -->|Yes| D[respondToInquiry]
     D --> E[updateKnowledgeBase]
     C -->|No| E
-    E --> F[distributeDocument]
-    F --> G[briefColleague]
-    G --> H[forwardCommunication]
+    E --> F{Document Needed?}
+    F -->|Yes| G[distributeDocument]
+    F -->|No| H[briefColleague]
+    G --> H
+    H --> I{External Relay?}
+    I -->|Yes| J[forwardCommunication]
+    I -->|No| K[Complete]
+    J --> K
+    K --> C
 ```
 
 ## Actor Relationships

@@ -81,6 +81,37 @@ Production and processing equipment maintenance encompasses the care of machiner
 | getFailureModeHistory | Query failure records by machine, type, or time period |
 | findLowStockParts | Locate spare parts at or below reorder points |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ProductionMachine ||--|| MaintenanceSchedule : "follows"
+    ProductionMachine ||--o{ OEERecord : "measured by"
+    ProductionMachine ||--o{ FailureMode : "experiences"
+    ProductionMachine ||--o{ ShutdownPlan : "scheduled in"
+    MaintenanceSchedule ||--o{ ShutdownPlan : "generates"
+    SparePartInventory ||--o{ ProductionMachine : "supplies"
+    FailureMode ||--o{ OEERecord : "impacts"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Running
+    Running --> MaintenancePlanned : preventiveMaintenancePlanned
+    MaintenancePlanned --> ShutdownCoordinated : shutdownCoordinated
+    ShutdownCoordinated --> UnderMaintenance : maintenanceTasksExecuted
+    UnderMaintenance --> Validating : processCapabilityValidated
+    Validating --> OEEMeasurement : oeeMeasured
+    Validating --> FailureAnalysis : failureModesAnalyzed
+    FailureAnalysis --> UnderMaintenance : rework
+    OEEMeasurement --> Running : meets target
+    OEEMeasurement --> MaintenancePlanned : below target
+    Running --> PartsReorder : sparePartsReordered
+    PartsReorder --> Running : stock replenished
+```
+
 ## Workflow
 
 ```mermaid

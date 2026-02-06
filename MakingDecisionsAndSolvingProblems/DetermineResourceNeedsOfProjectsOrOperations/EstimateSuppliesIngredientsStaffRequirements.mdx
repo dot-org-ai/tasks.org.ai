@@ -80,6 +80,33 @@ Estimating supplies, ingredients, and staff requirements for food preparation in
 | getStockLevels | Check current pantry and dry storage inventory levels |
 | getSupplyOrders | Find pending or completed supply orders by vendor or date |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MenuForecast ||--|{ IngredientRequirement : "drives"
+    Recipe ||--|{ IngredientRequirement : "specifies"
+    IngredientRequirement ||--o{ SupplyOrder : "triggers"
+    StaffSchedule }o--|| PrepSheet : "staffs"
+    PrepSheet ||--|{ IngredientRequirement : "consumes"
+    MenuForecast ||--|| StaffSchedule : "informs"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Forecasting
+    Forecasting --> IngredientsCalculated : demandForecasted
+    IngredientsCalculated --> WasteAdjusted : ingredientsCalculated
+    WasteAdjusted --> StockCheck : wasteAdjusted
+    StockCheck --> StaffPlanning : stockSufficient
+    StockCheck --> Ordering : stockShortageDetected
+    Ordering --> StaffPlanning : supplyOrderPlaced
+    StaffPlanning --> PrepReady : staffingEstimated
+    PrepReady --> [*] : prepSheetGenerated
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,8 +117,11 @@ graph TD
     D --> E{Sufficient Stock?}
     E -->|Yes| F[generatePrepSheet]
     E -->|No| G[placeSupplyOrder]
-    G --> F
-    F --> H[estimateStaffing]
+    G --> H{Delivery Confirmed?}
+    H -->|Yes| F
+    H -->|No| I[Adjust Menu Forecast]
+    I --> B
+    F --> J[estimateStaffing]
 ```
 
 ## Actor Relationships

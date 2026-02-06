@@ -87,17 +87,48 @@ Selling agricultural products involves managing inventories of crops, livestock,
 | getMarketPrices | Query current and historical commodity pricing data |
 | getCertifications | Search quality certificates by product, grade, or certifier |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ProductListing ||--o{ PriceQuote : "quoted as"
+    PriceQuote ||--o| SalesOrder : "confirmed as"
+    SalesOrder ||--|| QualityCertificate : "certified by"
+    SalesOrder ||--|| InvoiceRecord : "billed via"
+    ProductListing }o--|| HarvestReport : "sourced from"
+    ProductListing ||--o{ FuturesContract : "hedged by"
+    MarketAnalysis }o--|| ProductListing : "informs pricing"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Listed
+    Listed --> Quoted : quoteGenerated
+    Quoted --> Negotiating : termsNegotiated
+    Negotiating --> Quoted : quoteGenerated
+    Negotiating --> OrderConfirmed : orderConfirmed
+    OrderConfirmed --> QualityVerified : qualityCertified
+    QualityVerified --> Shipped : shipmentArranged
+    Shipped --> Paid : paymentProcessed
+    Paid --> MarketReviewed : marketAnalyzed
+    MarketReviewed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[listProduct] --> B[generateQuote]
     B --> C[negotiateTerms]
-    C --> D[confirmOrder]
-    D --> E[certifyQuality]
-    E --> F[arrangeShipment]
-    F --> G[processPayment]
-    G --> H[analyzeMarket]
+    C --> D{Deal Reached?}
+    D -->|Yes| E[confirmOrder]
+    D -->|No| B
+    E --> F[certifyQuality]
+    F --> G[arrangeShipment]
+    G --> H[processPayment]
+    H --> I[analyzeMarket]
 ```
 
 ## Actor Relationships

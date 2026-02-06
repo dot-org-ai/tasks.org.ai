@@ -81,6 +81,38 @@ Office equipment maintenance ensures that printers, copiers, fax machines, posta
 | getConsumableLevels | Query current stock levels for toner, ink, and supplies |
 | findExpiringContracts | Locate service contracts approaching renewal dates |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    OfficeDevice ||--|| ServiceContract : "covered by"
+    OfficeDevice ||--o{ ServiceRequest : "generates"
+    OfficeDevice ||--o{ UsageLog : "measured by"
+    OfficeDevice ||--|| WarrantyRecord : "protected by"
+    ServiceRequest ||--o{ ConsumableInventory : "draws from"
+    ServiceContract ||--o{ ServiceRequest : "governs"
+    UsageLog ||--o{ ServiceRequest : "triggers"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Active
+    Active --> Monitoring : usageMetricsTracked
+    Monitoring --> Scheduled : preventiveMaintenanceScheduled
+    Monitoring --> ServiceNeeded : serviceRequestSubmitted
+    Scheduled --> Troubleshooting : deviceTroubleshooted
+    ServiceNeeded --> Troubleshooting : deviceTroubleshooted
+    Troubleshooting --> ConsumableSwap : consumableReplaced
+    Troubleshooting --> Active : resolved
+    ConsumableSwap --> Active : device restored
+    Active --> ContractRenewal : serviceContractRenewed
+    ContractRenewal --> Active : renewed
+    Active --> Decommissioned : deviceDecommissioned
+    Decommissioned --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -97,7 +129,10 @@ graph TD
     H -->|No| J{End of Life?}
     I --> F
     J -->|Yes| K[decommissionDevice]
-    J -->|No| F
+    J -->|No| L{Contract Expiring?}
+    L -->|Yes| M[renewServiceContract]
+    L -->|No| F
+    M --> F
 ```
 
 ## Actor Relationships

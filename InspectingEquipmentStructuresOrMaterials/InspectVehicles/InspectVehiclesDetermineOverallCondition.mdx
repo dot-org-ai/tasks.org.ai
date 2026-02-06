@@ -87,6 +87,37 @@ Inspecting vehicles to determine overall condition involves conducting multi-poi
 | getFleetConditions | Query condition grades across a fleet by grade range or age |
 | getValuations | Look up market valuations by vehicle, condition grade, or date |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ConditionReport ||--o{ ConditionGrade : "references"
+    DamageRecord }o--|| ConditionReport : "documents"
+    ConditionReport ||--|{ MechanicalAssessment : "contains"
+    ConditionReport ||--o{ InteriorAssessment : "uses"
+    PhotoSet }o--|| ConditionReport : "documents"
+    ConditionReport ||--|{ MarketValuation : "contains"
+    ConditionReport ||--o{ WearCharge : "references"
+    ConditionGrade ||--o{ MechanicalAssessment : "contains"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> AssessmentInitiated
+    AssessmentInitiated --> ExteriorAssessed : exteriorAssessed
+    ExteriorAssessed --> InteriorAssessed : interiorAssessed
+    InteriorAssessed --> MechanicalAssessed : mechanicalAssessed
+    MechanicalAssessed --> ElectronicsAssessed : electronicsAssessed
+    ElectronicsAssessed --> DamageDocumented : damageDocumented
+    DamageDocumented --> ConditionGradeAssigned : conditionGradeAssigned
+    ConditionGradeAssigned --> ConditionReportGenerated : conditionReportGenerated
+    ElectronicsAssessed --> NeedsReview : electronicsAssessed
+    NeedsReview --> MechanicalAssessed : mechanicalAssessed
+    ConditionReportGenerated --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -98,6 +129,9 @@ graph TD
     E --> F[documentDamage]
     F --> G[assignConditionGrade]
     G --> H[generateConditionReport]
+    H --> Z{Quality Check?}
+    Z -->|Pass| ZZ[Complete]
+    Z -->|Fail| E
 ```
 
 ## Actor Relationships

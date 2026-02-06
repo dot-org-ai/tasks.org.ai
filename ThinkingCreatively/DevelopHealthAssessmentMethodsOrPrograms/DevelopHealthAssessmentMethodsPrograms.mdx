@@ -84,6 +84,36 @@ Health assessment method and program development involves designing screening pr
 | getPilotResults | Look up pilot study findings |
 | getOutcomeMeasures | Query program effectiveness metrics |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    AssessmentMethod ||--|{ ScreeningProtocol : implements
+    AssessmentMethod ||--|{ AssessmentInstrument : uses
+    ScreeningProtocol ||--|{ DataCollectionForm : captures
+    PilotStudy }o--|| AssessmentMethod : validates
+    ProgramGuideline ||--|| AssessmentMethod : governs
+    OutcomeMeasure }o--|| ScreeningProtocol : evaluates
+    DataCollectionForm }o--|| OutcomeMeasure : feeds
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> NeedsIdentification
+    NeedsIdentification --> InstrumentSelection : assessmentNeedsIdentified
+    InstrumentSelection --> ProtocolDesign : instrumentsSelected
+    ProtocolDesign --> Piloting : protocolDesigned
+    Piloting --> InstrumentSelection : pilot failed
+    Piloting --> DataSystemBuild : pilotStudyCompleted
+    DataSystemBuild --> Deployed : dataCollectionDeveloped
+    Deployed --> Evaluation : programDeployed
+    Evaluation --> ProtocolDesign : refinements needed
+    Evaluation --> Operational : outcomesEvaluated
+    Operational --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,10 +122,14 @@ graph TD
     B --> C[designProtocol]
     C --> D[conductPilotStudy]
     D --> E{Pilot Successful?}
-    E -->|No| B
-    E -->|Yes| F[developDataCollection]
-    F --> G[deployProgram]
-    G --> H[evaluateOutcomes]
+    E -->|No| F{Instrument Issue?}
+    F -->|Yes| B
+    F -->|No| C
+    E -->|Yes| G[developDataCollection]
+    G --> H[deployProgram]
+    H --> I[evaluateOutcomes]
+    I --> J{Meets Targets?}
+    J -->|No| C
 ```
 
 ## Actor Relationships

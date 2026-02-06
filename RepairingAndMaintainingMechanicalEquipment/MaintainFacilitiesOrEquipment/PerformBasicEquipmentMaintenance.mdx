@@ -81,6 +81,39 @@ Performing basic equipment maintenance involves scheduling routine inspections, 
 | getPerformanceTrends | Find equipment performance data by metric or period |
 | findSpareParts | Search spare parts inventory by equipment type or part number |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Equipment ||--|{ MaintenanceTask : "requires"
+    Equipment ||--|| MaintenanceLog : "tracked in"
+    Equipment ||--o{ PerformanceTrend : "measured by"
+    MaintenanceTask ||--o{ SparePart : "consumes"
+    MaintenanceTask ||--|| InspectionChecklist : "follows"
+    MaintenanceLog ||--o{ MaintenanceTask : "records"
+    SparePart }o--|| Equipment : "compatible with"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Operational
+    Operational --> Scheduled : maintenanceTaskScheduled
+    Scheduled --> Inspecting : inspectionPerformed
+    Inspecting --> InMaintenance : maintenanceTaskExecuted
+    Inspecting --> Escalated : issueEscalated
+    Escalated --> InMaintenance : specialist approved
+    InMaintenance --> PartReplacement : sparePartReplaced
+    PartReplacement --> Documented : maintenanceLogUpdated
+    InMaintenance --> Documented : maintenanceLogUpdated
+    Documented --> Monitoring : performanceAnomalyDetected
+    Documented --> Operational : normal operation
+    Monitoring --> Scheduled : re-maintenance needed
+    Monitoring --> Operational : resolved
+    Operational → [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,11 +122,16 @@ graph TD
     B --> C{Issue Found?}
     C -->|No| D[executeMaintenanceTask]
     C -->|Yes| E[escalateIssue]
-    D --> F[replaceSparePart]
-    F --> G[updateMaintenanceLog]
-    G --> H[monitorPerformanceTrend]
-    E --> I[Specialist Review]
-    I --> D
+    D --> F{Part Needed?}
+    F -->|Yes| G[replaceSparePart]
+    F -->|No| H[updateMaintenanceLog]
+    G --> H
+    H --> I[monitorPerformanceTrend]
+    I --> J{Anomaly?}
+    J -->|Yes| A
+    J -->|No| K[Schedule Next Maintenance]
+    E --> L[Specialist Review]
+    L --> D
 ```
 
 ## Actor Relationships

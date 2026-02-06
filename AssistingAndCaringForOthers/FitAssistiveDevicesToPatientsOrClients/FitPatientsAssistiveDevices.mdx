@@ -82,6 +82,35 @@ Fitting patients for assistive devices involves evaluating functional needs, sel
 | findPatientsNeedingAdjustment | Locate patients with pending device adjustments |
 | getTrainingProgress | Retrieve training plan status and completion for a patient |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    DevicePrescription ||--|| FunctionalAssessment : "guides"
+    FunctionalAssessment ||--|| DeviceSpecification : "determines"
+    DeviceSpecification ||--|| FittingSession : "fitted in"
+    FittingSession ||--o{ DeviceAdjustment : "may require"
+    FittingSession ||--|| TrainingPlan : "followed by"
+    DeviceAdjustment }o--|| FittingSession : "triggers refit"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> NeedsAssessed
+    NeedsAssessed --> DeviceSelected : deviceSelected
+    DeviceSelected --> Measured : measurementsTaken
+    Measured --> InFabrication : deviceFabricated
+    InFabrication --> ReadyForFitting : deviceReceived
+    ReadyForFitting --> Fitted : fittingPerformed
+    Fitted --> Adjusting : deviceAdjusted
+    Adjusting --> Fitted : refitting
+    Fitted --> Training : patientTrained
+    Training --> Complete : trainingComplete
+    Complete --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,7 +123,9 @@ graph TD
     F -->|Yes| G[trainPatient]
     F -->|No| H[adjustDevice]
     H --> E
-    G --> I[Complete]
+    G --> I{Patient Competent?}
+    I -->|Yes| J[Complete]
+    I -->|No| G
 ```
 
 ## Actor Relationships

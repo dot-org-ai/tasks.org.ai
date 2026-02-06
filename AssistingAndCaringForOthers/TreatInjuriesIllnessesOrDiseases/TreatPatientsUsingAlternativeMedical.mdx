@@ -81,18 +81,49 @@ Treating patients using alternative medical procedures involves assessing patien
 | findModalityOutcomes | Query treatment outcomes by modality type and effectiveness |
 | getPatientHistory | Retrieve complete alternative care history for a patient |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    PatientIntake ||--|| TreatmentPlan : creates
+    TreatmentPlan ||--|{ TherapySession : schedules
+    TreatmentPlan ||--o{ HerbalFormulation : "may include"
+    TherapySession ||--|| Modality : uses
+    TherapySession ||--|| OutcomeAssessment : "evaluated by"
+    OutcomeAssessment }o--|| TreatmentPlan : "may adjust"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> IntakeComplete
+    IntakeComplete --> PlanCreated : treatmentPlanCreated
+    PlanCreated --> InTherapy : therapyAdministered
+    InTherapy --> Documented : sessionDocumented
+    Documented --> Assessed : outcomeAssessed
+    Assessed --> InTherapy : continueTherapy
+    Assessed --> PlanAdjusted : treatmentPlanAdjusted
+    PlanAdjusted --> InTherapy : therapyAdministered
+    Assessed --> Complete : goalsAchieved
+    Complete --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[conductIntake] --> B[createTreatmentPlan]
-    B --> C[administerTherapy]
-    C --> D[documentSession]
-    D --> E[assessOutcome]
-    E --> F{Effective?}
-    F -->|Yes| G[Continue Treatment]
-    F -->|No| H[adjustTreatmentPlan]
-    H --> C
+    B --> C{Herbal Support?}
+    C -->|Yes| D[prescribeFormulation]
+    C -->|No| E[administerTherapy]
+    D --> E
+    E --> F[documentSession]
+    F --> G[assessOutcome]
+    G --> H{Effective?}
+    H -->|Yes| I[Continue Treatment]
+    H -->|No| J[adjustTreatmentPlan]
+    J --> E
 ```
 
 ## Actor Relationships

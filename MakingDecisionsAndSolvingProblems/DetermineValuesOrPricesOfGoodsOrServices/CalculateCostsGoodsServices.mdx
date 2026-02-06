@@ -81,6 +81,33 @@ Calculating costs of goods or services involves aggregating direct materials, la
 | getStandardVariances | Find items where actual costs deviate from standards |
 | getCostTrends | Analyze cost changes over time by component or category |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    CostSheet ||--|{ MaterialCost : "includes"
+    CostSheet ||--|{ LaborCost : "includes"
+    CostSheet ||--|| OverheadAllocation : "applies"
+    CostSheet ||--o{ CostStandard : "compared-to"
+    CostSheet ||--|| MarginAnalysis : "feeds"
+    CostStandard }o--|| MarginAnalysis : "benchmarks"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> DirectCostCalculation
+    DirectCostCalculation --> OverheadApplication : directCostsCalculated
+    OverheadApplication --> TotalComputed : overheadAllocated
+    TotalComputed --> StandardComparison : totalCostComputed
+    StandardComparison --> RateUpdate : standardVarianceDetected
+    RateUpdate --> DirectCostCalculation : costRatesUpdated
+    StandardComparison --> MarginReview : withinStandard
+    MarginReview --> ReportGeneration : marginAnalyzed
+    ReportGeneration --> [*] : costReportGenerated
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,7 +119,10 @@ graph TD
     E -->|No| F[updateCostRates]
     F --> A
     E -->|Yes| G[analyzeMargin]
-    G --> H[generateCostReport]
+    G --> H{Margin Target Met?}
+    H -->|No| I[Review Cost Drivers]
+    I --> A
+    H -->|Yes| J[generateCostReport]
 ```
 
 ## Actor Relationships

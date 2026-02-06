@@ -80,6 +80,35 @@ Patron vehicle assistance involves helping individuals board or exit cars, buses
 | getMobilityAids | Find available mobility equipment at a location |
 | getSafetyRecords | Search safety check records by date or patron |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    AssistanceRequest ||--|| VehicleArrival : "triggered by"
+    AssistanceRequest ||--o| MobilityAid : "may require"
+    AssistanceRequest ||--o{ LuggageTicket : "may include"
+    AssistanceRequest ||--|| SafetyCheckRecord : "verified by"
+    VehicleArrival ||--|| CurbsideZone : "arrives at"
+    CurbsideZone ||--|{ VehicleArrival : receives
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Requested
+    Requested --> VehicleReady : vehiclePositioned
+    VehicleReady --> AidDeployed : mobilityAidDeployed
+    VehicleReady --> Boarding : noMobilityNeeded
+    AidDeployed --> Boarding : aidReady
+    Boarding --> Boarded : boardingCompleted
+    Boarding --> Alighted : alightingCompleted
+    Boarded --> LuggageLoaded : luggageHandled
+    Alighted --> LuggageLoaded : luggageHandled
+    LuggageLoaded --> SafetyVerified : safetyConfirmed
+    SafetyVerified --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -87,10 +116,13 @@ graph TD
     A[requestAssistance] --> B[positionVehicle]
     B --> C{Mobility Aid Needed?}
     C -->|Yes| D[deployMobilityAid]
-    C -->|No| E[assistBoarding]
+    C -->|No| E{Boarding or Alighting?}
     D --> E
-    E --> F[handleLuggage]
-    F --> G[confirmSafety]
+    E -->|Boarding| F[assistBoarding]
+    E -->|Alighting| G[assistAlighting]
+    F --> H[handleLuggage]
+    G --> H
+    H --> I[confirmSafety]
 ```
 
 ## Actor Relationships

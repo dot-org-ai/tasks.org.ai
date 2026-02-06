@@ -83,6 +83,33 @@ Library and archival patron assistance involves guiding individuals through cata
 | getCollections | Browse archival collections by subject or date range |
 | findInquiries | Search reference transactions by topic or date |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ReferenceInquiry ||--|{ CatalogRecord : searches
+    CatalogRecord ||--o{ CirculationTransaction : "checked out via"
+    CatalogRecord ||--o| HoldRequest : "reserved via"
+    DigitalResource ||--|| CatalogRecord : "cataloged as"
+    ArchivalCollection ||--|{ CatalogRecord : contains
+    ReferenceInquiry ||--o| ResearchGuide : "supported by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> InquiryReceived
+    InquiryReceived --> CatalogSearched : catalogSearched
+    CatalogSearched --> ResourceFound : resourceLocated
+    CatalogSearched --> InterlibraryRequest : interlibraryRequested
+    ResourceFound --> CheckedOut : itemCheckedOut
+    InterlibraryRequest --> OnHold : holdPlaced
+    OnHold --> CheckedOut : itemAvailable
+    CheckedOut --> ResearchGuided : researchGuided
+    ResearchGuided --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,11 +117,13 @@ graph TD
     A[receiveInquiry] --> B[searchCatalog]
     B --> C{Resource Available?}
     C -->|Yes| D[locateResource]
-    C -->|No| E[requestInterlibrary]
-    D --> F[checkoutItem]
-    E --> G[placeHold]
-    F --> H[guidResearch]
-    G --> H
+    C -->|No| E{Interlibrary Option?}
+    E -->|Yes| F[requestInterlibrary]
+    E -->|No| G[guidResearch]
+    D --> H[checkoutItem]
+    F --> I[placeHold]
+    H --> G
+    I --> G
 ```
 
 ## Actor Relationships

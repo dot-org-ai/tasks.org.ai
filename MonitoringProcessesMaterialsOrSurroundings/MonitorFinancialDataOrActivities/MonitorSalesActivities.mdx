@@ -82,6 +82,36 @@ Sales activity monitoring involves tracking sales representative performance, de
 | getPipeline | View current pipeline by stage or rep |
 | getForecast | Get revenue forecast for a period |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Activity }o--|| Deal : "advances"
+    Deal }o--|| Pipeline : "belongs to"
+    Deal ||--o| Quota : "contributes to"
+    Pipeline ||--o{ Forecast : "projected in"
+    Quota ||--o{ Metric : "measured by"
+    Activity ||--o{ Metric : "counted in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Prospecting
+    Prospecting --> Qualifying : activityTracked
+    Qualifying --> Proposing : dealStageUpdated
+    Proposing --> Negotiating : dealStageUpdated
+    Negotiating --> Won : dealClosed
+    Negotiating --> Lost : dealLost
+    Won --> Reviewed : performanceAssessed
+    Lost --> Reviewed : performanceAssessed
+    Reviewed --> Prospecting : activityTracked
+    Negotiating --> AtRisk : riskIdentified
+    AtRisk --> Negotiating : riskMitigated
+    AtRisk --> Lost : dealLost
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,14 +119,15 @@ graph TD
     A[trackActivity] --> B[updateDealStage]
     B --> C{Deal Won?}
     C -->|Yes| D[Record Revenue]
-    C -->|No| E[Continue]
+    C -->|No| E{At Risk?}
     D --> F[assessPerformance]
-    E --> G[generateForecast]
-    G --> H{Risk Detected?}
-    H -->|Yes| I[identifyRisk]
-    H -->|No| J[Continue]
-    I --> K[scheduleReview]
-    F --> L[exportMetrics]
+    E -->|Yes| G[identifyRisk]
+    E -->|No| H[generateForecast]
+    G --> I[scheduleReview]
+    F --> J[exportMetrics]
+    H --> A
+    I --> A
+    J --> A
 ```
 
 ## Actor Relationships

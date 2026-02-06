@@ -81,6 +81,35 @@ Determining resource needs involves evaluating organizational goals, project req
 | getGaps | Find resource shortfalls across active initiatives |
 | getUtilization | Look up resource utilization rates by team or project |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ResourceRequirement ||--o{ ResourceGap : "reveals"
+    CapacityAssessment ||--o{ ResourceGap : "identifies"
+    ResourceGap ||--o{ FundingRequest : "justifies"
+    FundingRequest ||--o{ AllocationPlan : "funds"
+    AllocationPlan ||--|{ ResourceRequirement : "fulfills"
+    AllocationPlan ||--|| UtilizationReport : "tracked-by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> AssessingRequirements
+    AssessingRequirements --> AnalyzingCapacity : requirementsAssessed
+    AnalyzingCapacity --> GapAnalysis : capacityAnalyzed
+    GapAnalysis --> Prioritizing : gapIdentified
+    GapAnalysis --> Allocating : noGapsFound
+    Prioritizing --> FundingPending : needsPrioritized
+    FundingPending --> Allocating : fundingRequested
+    FundingPending --> Prioritizing : fundingDenied
+    Allocating --> Monitoring : resourcesAllocated
+    Monitoring --> AssessingRequirements : utilizationReviewed
+    Monitoring --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -96,6 +125,9 @@ graph TD
     H -->|No| I[Re-prioritize]
     I --> E
     F --> J[reviewUtilization]
+    J --> K{Rebalance Needed?}
+    K -->|Yes| A
+    K -->|No| J
 ```
 
 ## Actor Relationships

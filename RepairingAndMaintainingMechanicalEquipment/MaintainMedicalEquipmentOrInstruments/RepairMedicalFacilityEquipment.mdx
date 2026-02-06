@@ -83,21 +83,52 @@ Repairing medical facility equipment involves diagnosing and correcting failures
 | getComplianceDocumentation | Retrieve repair records required for regulatory inspections |
 | getPartsOnOrder | Check status of replacement parts awaiting delivery |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    FacilitySystem ||--o{ RepairTicket : "subject of"
+    FacilitySystem ||--o{ DowntimeRecord : "tracked in"
+    FacilitySystem ||--o{ InspectionReport : "assessed by"
+    FacilitySystem ||--|{ RegulatoryRequirement : "governed by"
+    RepairTicket ||--o{ ReplacementPart : "requires"
+    RepairTicket ||--|| InspectionReport : "verified by"
+    DowntimeRecord }o--|| RepairTicket : "caused by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Reported
+    Reported --> Triaged : repairRequestTriaged
+    Triaged --> Diagnosing : systemFailureDiagnosed
+    Diagnosing --> PartsOnOrder : replacementPartsOrdered
+    Diagnosing --> Repairing : repairExecuted
+    PartsOnOrder --> Repairing : parts received
+    Repairing --> Testing : systemTestedAfterRepair
+    Testing --> Documented : repairCompletionDocumented
+    Testing --> Diagnosing : test failed
+    Documented --> ClinicalNotified : clinicalTeamsNotified
+    ClinicalNotified --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
-    A[triageRepairRequest] --> B[diagnoseSystemFailure]
-    B --> C{Parts Needed?}
-    C -->|Yes| D[orderReplacementParts]
-    C -->|No| E[executeRepair]
-    D --> E
-    E --> F[testSystemAfterRepair]
-    F --> G{System Operational?}
-    G -->|Yes| H[documentRepairCompletion]
-    G -->|No| I[Re-diagnose]
-    I --> B
-    H --> J[notifyClinicalTeams]
+    A[triageRepairRequest] --> B[notifyClinicalTeams]
+    B --> C[diagnoseSystemFailure]
+    C --> D{Parts Needed?}
+    D -->|Yes| E[orderReplacementParts]
+    D -->|No| F[executeRepair]
+    E --> F
+    F --> G[testSystemAfterRepair]
+    G --> H{System Operational?}
+    H -->|Yes| I[documentRepairCompletion]
+    H -->|No| J[Re-diagnose]
+    J --> C
+    I --> K[notifyClinicalTeams]
 ```
 
 ## Actor Relationships

@@ -87,6 +87,37 @@ Testing green technologies or processes involves designing and executing control
 | getReports | Look up validation reports by technology or certification status |
 | getBenchmarks | Access comparison benchmarks for a given technology category |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TestProtocol ||--|{ PerformanceTrial : "governs"
+    TestProtocol ||--o{ ComparisonBenchmark : "references"
+    PerformanceTrial ||--|| TestSpecimen : "evaluates"
+    PerformanceTrial ||--|{ DataSet : "generates"
+    PerformanceTrial ||--o{ EnvironmentalMetric : "measures"
+    BaselineMeasurement ||--o{ PerformanceTrial : "compared against"
+    ValidationReport }o--|| PerformanceTrial : "summarizes"
+    DataSet ||--|{ EnvironmentalMetric : "contains"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ProtocolDesign
+    ProtocolDesign --> BaselineCapture : protocolDeveloped
+    BaselineCapture --> TrialExecution : baselineMeasured
+    TrialExecution --> DataCollection : trialConducted
+    DataCollection --> Analysis : dataCollected
+    Analysis --> Validated : performanceValidated
+    Analysis --> Failed : performanceFailed
+    Failed --> ProtocolDesign : recommendAction
+    Failed --> TrialExecution : trialConducted
+    Validated --> ReportDrafting : reportGenerated
+    ReportDrafting --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -99,7 +130,10 @@ graph TD
     F -->|Yes| G[validatePerformance]
     F -->|No| H[recommendAction]
     G --> I[generateReport]
-    H --> I
+    H --> J{Redesign or Retest?}
+    J -->|Retest| C
+    J -->|Redesign| K[Return to Developer]
+    I --> L[Complete]
 ```
 
 ## Actor Relationships

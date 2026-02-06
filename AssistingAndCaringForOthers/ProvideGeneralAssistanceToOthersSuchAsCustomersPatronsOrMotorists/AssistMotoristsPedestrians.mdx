@@ -81,6 +81,33 @@ Motorist and pedestrian assistance involves providing directional guidance, road
 | getResponseLogs | Find documented actions for a specific request |
 | findIncidents | Search incident reports by date, severity, or location |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    AssistanceRequest ||--|| IncidentReport : documents
+    AssistanceRequest ||--|| ServiceDispatch : triggers
+    AssistanceRequest ||--|| Location : "located at"
+    ServiceDispatch ||--|{ ResponseLog : generates
+    AssistanceRequest ||--o| Vehicle : involves
+    Location ||--|| IncidentReport : "referenced in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RequestCreated
+    RequestCreated --> Dispatched : serviceDispatched
+    Dispatched --> OnScene : sceneAssessed
+    OnScene --> Escalated : emergencyEscalated
+    OnScene --> TrafficManaged : trafficDirected
+    TrafficManaged --> DirectionsGiven : directionsProvided
+    DirectionsGiven --> Closed : requestClosed
+    Escalated --> Closed : requestClosed
+    Closed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,10 +116,12 @@ graph TD
     B --> C[assessScene]
     C --> D{Emergency?}
     D -->|Yes| E[escalateEmergency]
-    D -->|No| F[directTraffic]
-    F --> G[provideDirections]
-    G --> H[closeRequest]
-    E --> H
+    D -->|No| F{Traffic Issue?}
+    F -->|Yes| G[directTraffic]
+    F -->|No| H[provideDirections]
+    G --> H
+    H --> I[closeRequest]
+    E --> I
 ```
 
 ## Actor Relationships

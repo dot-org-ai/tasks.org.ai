@@ -56,7 +56,7 @@ Compiling geographic or related data involves gathering spatial information from
 |--------|-------------|
 | acquireData | Obtain geographic data from designated sources |
 | reprojectData | Transform spatial data between coordinate reference systems |
-| integrateLayyers | Merge multiple spatial datasets into a unified compilation |
+| integrateLayers | Merge multiple spatial datasets into a unified compilation |
 | validateTopology | Check spatial relationships and geometric consistency |
 | enrichAttributes | Add non-spatial data to geographic feature records |
 | generateMapProduct | Create a cartographic output from compiled spatial layers |
@@ -84,12 +84,43 @@ Compiling geographic or related data involves gathering spatial information from
 | findSurveys | Locate field surveys by date, area, or project |
 | getAttributeValues | Query attribute data linked to geographic features |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SpatialDataset ||--|{ FeatureLayer : contains
+    FeatureLayer ||--|| CoordinateSystem : "referenced by"
+    FieldSurvey ||--|{ FeatureLayer : produces
+    FeatureLayer ||--|| AttributeTable : "linked to"
+    BaseMap ||--o{ FeatureLayer : underlays
+    SpatialDataset ||--|| MapProduct : "rendered as"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Acquiring
+    Acquiring --> Acquired : dataAcquired
+    Acquired --> Reprojecting : reprojectData
+    Reprojecting --> Reprojected : dataReprojected
+    Reprojected --> Integrating : integrateLayers
+    Integrating --> Integrated : layersIntegrated
+    Integrated --> Validating : validateTopology
+    Validating --> Integrated : topologyFailed
+    Validating --> Validated : topologyValidated
+    Validated --> Enriched : attributesEnriched
+    Enriched --> MapReady : mapProductGenerated
+    MapReady --> Published : datasetPublished
+    Published --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[acquireData] --> B[reprojectData]
-    B --> C[integrateLayyers]
+    B --> C[integrateLayers]
     C --> D[validateTopology]
     D --> E{Valid?}
     E -->|No| C
@@ -134,7 +165,7 @@ await compiler.reprojectData({
   targetCRS: 'EPSG:3857'
 })
 
-await compiler.integrateLayyers({
+await compiler.integrateLayers({
   layers: [survey.id, 'parcels-layer-2026', 'zoning-boundaries'],
   outputName: 'downtown-compiled-2026'
 })

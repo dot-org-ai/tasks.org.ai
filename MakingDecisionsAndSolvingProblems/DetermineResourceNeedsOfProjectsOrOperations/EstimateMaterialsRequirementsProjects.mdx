@@ -79,6 +79,33 @@ Estimating materials requirements for projects involves reviewing project design
 | getSupplierPricing | Retrieve current pricing and availability from material suppliers |
 | getBillOfMaterials | Access the bill of materials for a specific project or phase |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    QuantityTakeoff ||--|{ BillOfMaterials : "populates"
+    BillOfMaterials ||--o{ WasteFactor : "adjusted-by"
+    BillOfMaterials ||--o{ MaterialPriceQuote : "priced-by"
+    MaterialPriceQuote }o--|| ProcurementSchedule : "scheduled-in"
+    BillOfMaterials ||--|| ProcurementSchedule : "ordered-via"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> DesignReview
+    DesignReview --> TakeoffInProgress : designDocumentsReviewed
+    TakeoffInProgress --> WasteAdjusted : quantityTakeoffCompleted
+    WasteAdjusted --> InventoryCheck : wasteFactorsApplied
+    InventoryCheck --> Pricing : inventoryChecked
+    Pricing --> BudgetReview : materialsPriced
+    BudgetReview --> TakeoffInProgress : overBudget
+    BudgetReview --> BOMReady : withinBudget
+    BOMReady --> Scheduled : billOfMaterialsBuilt
+    Scheduled --> [*] : procurementScheduled
+```
+
 ## Workflow
 
 ```mermaid
@@ -88,9 +115,10 @@ graph TD
     C --> D[checkInventory]
     D --> E[priceMaterials]
     E --> F{Within Budget?}
-    F -->|No| G[Value Engineer]
-    G --> B
-    F -->|Yes| H[buildBillOfMaterials]
+    F -->|No| G{Value Engineer?}
+    G -->|Yes| B
+    G -->|Request Increase| H[buildBillOfMaterials]
+    F -->|Yes| H
     H --> I[scheduleProcurement]
 ```
 

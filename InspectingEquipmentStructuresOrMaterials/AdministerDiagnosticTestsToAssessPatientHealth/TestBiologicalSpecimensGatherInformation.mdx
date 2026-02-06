@@ -88,6 +88,38 @@ Testing biological specimens to gather information about patient conditions invo
 | getPathologyReports | Look up finalized pathology reports by patient or diagnosis |
 | getPendingCases | List specimens awaiting processing, interpretation, or sign-out |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Specimen ||--|| AccessionRecord : "registered as"
+    Specimen ||--o{ HistologySlide : "sectioned into"
+    Specimen ||--o{ CultureResult : "cultured into"
+    Specimen ||--o{ MolecularResult : "tested for"
+    HistologySlide ||--o{ SpecialStain : "stained with"
+    CultureResult ||--|{ SensitivityReport : "tested against"
+    PathologyReport }o--|| Specimen : "diagnoses"
+    PathologyReport }o--o{ MolecularResult : "incorporates"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Accessioned
+    Accessioned --> HistologyProcessing : histologyProcessed
+    Accessioned --> Culturing : cultureGrown
+    Accessioned --> MolecularTesting : molecularResultReady
+    HistologyProcessing --> MicroscopyReview : microscopyCompleted
+    Culturing --> OrganismID : organismIdentified
+    OrganismID --> SensitivityTesting : sensitivityCompleted
+    MicroscopyReview --> ReportDrafting : reportIssued
+    SensitivityTesting --> ReportDrafting : reportIssued
+    MolecularTesting --> ReportDrafting : reportIssued
+    ReportDrafting --> Issued : reportIssued
+    Issued --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -98,10 +130,12 @@ graph TD
     B -->|Molecular| E[runMolecularAssay]
     C --> F[examineMicroscopy]
     D --> G[identifyOrganism]
-    G --> H[performSensitivity]
-    F --> I[issuePathologyReport]
-    H --> I
-    E --> I
+    G --> H{Organism Found?}
+    H -->|Yes| I[performSensitivity]
+    H -->|No| J[issuePathologyReport]
+    F --> J
+    I --> J
+    E --> J
 ```
 
 ## Actor Relationships

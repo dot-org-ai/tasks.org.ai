@@ -82,6 +82,38 @@ Post-surgical and post-treatment patient monitoring involves systematic assessme
 | getComplications | View adverse events by procedure type |
 | getMilestones | Find recovery achievements by patient or cohort |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    RecoveryPlan ||--|{ Milestone : "defines"
+    RecoveryPlan ||--o{ Assessment : "evaluated via"
+    Assessment ||--o{ WoundStatus : "includes"
+    Assessment ||--o{ Complication : "may detect"
+    Milestone }o--|| Assessment : "verified by"
+    Complication }o--|| FollowUpVisit : "triggers"
+    Milestone }o--|| FollowUpVisit : "scheduled at"
+    RecoveryPlan ||--o{ FollowUpVisit : "includes"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> PostProcedure
+    PostProcedure --> Assessed : recoveryAssessed
+    Assessed --> WoundChecked : woundInspected
+    WoundChecked --> Recovering : complianceTracked
+    WoundChecked --> ComplicationFound : complicationDetected
+    Recovering --> MilestoneHit : milestoneAchieved
+    ComplicationFound --> PlanRevised : planUpdated
+    PlanRevised --> FollowUpSet : followUpScheduled
+    MilestoneHit --> FullyRecovered : allMilestonesComplete
+    MilestoneHit --> FollowUpSet : followUpScheduled
+    Recovering --> FollowUpSet : followUpScheduled
+    FollowUpSet --> Assessed : recoveryAssessed
+```
+
 ## Workflow
 
 ```mermaid
@@ -99,6 +131,7 @@ graph TD
     K -->|Yes| L[clearForActivity]
     K -->|No| M[scheduleFollowUp]
     J --> M
+    G --> M
     M --> B
 ```
 

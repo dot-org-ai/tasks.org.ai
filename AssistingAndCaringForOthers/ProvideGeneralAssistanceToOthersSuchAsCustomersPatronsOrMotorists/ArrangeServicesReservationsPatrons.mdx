@@ -81,6 +81,36 @@ Service and reservation arrangement involves receiving patron requests, checking
 | getCancellations | Retrieve cancelled reservations by reason or date |
 | getPatronHistory | View past bookings and preferences for a patron |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ServiceRequest ||--o{ AvailabilitySlot : "checked against"
+    ServiceRequest ||--o| Reservation : "becomes"
+    Reservation ||--|| Confirmation : "triggers"
+    Reservation ||--o| Deposit : "secured by"
+    Reservation ||--o| CancellationRecord : "may produce"
+    PatronProfile ||--|{ Reservation : places
+    PatronProfile ||--|{ ServiceRequest : submits
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RequestReceived
+    RequestReceived --> AvailabilityChecked : availabilityChecked
+    AvailabilityChecked --> Booked : reservationCreated
+    AvailabilityChecked --> RequestReceived : noAvailability
+    Booked --> DepositHeld : depositCollected
+    DepositHeld --> Confirmed : confirmationSent
+    Confirmed --> Fulfilled : serviceDelivered
+    Confirmed --> Cancelled : reservationCancelled
+    Cancelled --> [*]
+    Fulfilled --> FollowedUp : followUpCompleted
+    FollowedUp --> [*]
+```
+
 ## Workflow
 
 ```mermaid

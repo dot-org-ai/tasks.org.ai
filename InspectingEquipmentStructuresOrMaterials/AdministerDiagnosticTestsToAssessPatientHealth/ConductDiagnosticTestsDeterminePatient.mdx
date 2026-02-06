@@ -88,6 +88,36 @@ Conducting diagnostic tests to determine patient health encompasses the broad sp
 | getSpecimenStatus | Track the processing status of collected specimens |
 | getPatientLabHistory | Look up all prior lab results for a specific patient |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TestOrder ||--|{ Specimen : "requires collection of"
+    TestOrder ||--o{ TestPanel : "groups into"
+    Specimen ||--|{ LabResult : "produces"
+    Specimen ||--|| ChainOfCustody : "tracked by"
+    LabResult ||--o{ ReferenceRange : "compared against"
+    LabResult ||--o{ CriticalValue : "may trigger"
+    QualityControlRecord ||--o{ LabResult : "validates"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Ordered
+    Ordered --> Collected : specimenCollected
+    Collected --> Processing : specimenProcessed
+    Processing --> Analyzed : analysisCompleted
+    Analyzed --> Validated : resultsValidated
+    Validated --> Critical : criticalValueFlagged
+    Validated --> Reported : resultsReported
+    Critical --> Reported : resultsReported
+    Reported --> FollowUp : followUpOrdered
+    FollowUp --> Ordered : testsOrdered
+    Reported --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -102,6 +132,7 @@ graph TD
     G --> H
     H --> I{Follow-Up Needed?}
     I -->|Yes| J[orderFollowUp]
+    J --> A
     I -->|No| K[Complete]
 ```
 

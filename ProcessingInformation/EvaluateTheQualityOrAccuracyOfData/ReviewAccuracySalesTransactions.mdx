@@ -82,6 +82,36 @@ Sales transaction review ensures that revenue records, order details, and paymen
 | getUnreconciled | Find transactions with unmatched payments |
 | getTaxErrors | List transactions with tax calculation issues |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Transaction ||--|{ LineItem : contains
+    Transaction ||--|| Payment : "settled by"
+    LineItem ||--o{ Discount : "may have"
+    Transaction ||--|| TaxCalculation : "taxed by"
+    Transaction ||--o{ Discrepancy : "may produce"
+    Payment ||--o{ Discrepancy : "may trigger"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> PendingReview
+    PendingReview --> Reviewing : reviewTransaction
+    Reviewing --> PricingChecked : pricingValidated
+    PricingChecked --> TaxChecked : taxCalculationChecked
+    TaxChecked --> PaymentReconciled : paymentReconciled
+    PaymentReconciled --> Approved : transactionApproved
+    Reviewing --> DiscrepancyFound : discrepancyFlagged
+    PricingChecked --> DiscrepancyFound : discrepancyFlagged
+    TaxChecked --> DiscrepancyFound : discrepancyFlagged
+    DiscrepancyFound --> Correcting : correctTransaction
+    Correcting --> PendingReview : transactionCorrected
+    Approved --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -152,8 +182,8 @@ transactions.discrepancyFlagged(async ({ transactionId, amount, type }) => {
 })
 
 // Auto-approve low-value transactions
-transactions.transactionReviewed(async ({ transactionId, totalAmount }) => {
-  if (totalAmount < 50 && review.discrepancies.length === 0) {
+transactions.transactionReviewed(async ({ transactionId, totalAmount, discrepancies }) => {
+  if (totalAmount < 50 && discrepancies.length === 0) {
     await transactions.approveTransaction({ transactionId })
   }
 })

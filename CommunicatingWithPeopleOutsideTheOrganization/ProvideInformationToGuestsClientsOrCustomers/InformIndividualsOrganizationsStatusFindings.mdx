@@ -82,6 +82,33 @@ Status and findings communication involves preparing, distributing, and confirmi
 | getResponses | Find replies and acknowledgments from recipients |
 | getPendingNotifications | List scheduled or undelivered notifications |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    StatusUpdate ||--|| Notification : "delivered as"
+    Finding ||--|| Notification : "communicated via"
+    Notification ||--o| DeliveryReceipt : "confirmed by"
+    Notification ||--o| Response : "replied with"
+    Notification }o--|| Template : "formatted from"
+    DeliveryReceipt }o--|| Response : "precedes"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> NotificationPrepared
+    NotificationPrepared --> NotificationSent : notificationSent
+    NotificationSent --> DeliveryConfirmed : deliveryConfirmed
+    NotificationSent --> DeliveryFailed : deliveryFailed
+    DeliveryFailed --> NotificationSent : resent
+    DeliveryConfirmed --> AcknowledgmentReceived : acknowledgmentReceived
+    DeliveryConfirmed --> ResponseReceived : responseReceived
+    AcknowledgmentReceived --> [*]
+    ResponseReceived --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,16 +116,17 @@ graph TD
     A[prepareNotification] --> B[sendNotification]
     B --> C{Delivered?}
     C -->|Yes| D[trackDelivery]
-    C -->|No| E[deliveryFailed]
-    E --> F[resendNotification]
-    F --> C
-    D --> G{Acknowledgment Required?}
-    G -->|Yes| H[requestAcknowledgment]
-    G -->|No| I[Complete]
-    H --> J{Received?}
-    J -->|Yes| K[acknowledgmentReceived]
-    J -->|No| L[Follow Up]
-    K --> I
+    C -->|No| E[resendNotification]
+    E --> F{Retry Limit?}
+    F -->|No| B
+    F -->|Yes| G[Escalate]
+    D --> H{Acknowledgment Required?}
+    H -->|Yes| I[requestAcknowledgment]
+    H -->|No| J[Complete]
+    I --> K{Received?}
+    K -->|Yes| J
+    K -->|No| L[scheduleNotification]
+    L --> B
 ```
 
 ## Actor Relationships

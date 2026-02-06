@@ -82,6 +82,33 @@ Patron wayfinding involves delivering directions, maps, and navigation assistanc
 | getLandmarks | Find reference points near patron location |
 | getAccessibleRoutes | List mobility-friendly navigation options |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Destination ||--|{ Route : "reached via"
+    Route ||--|{ Landmark : "passes through"
+    Route ||--o| AccessiblePath : "alternative"
+    Map ||--|{ Landmark : displays
+    Route ||--o{ TransportOption : "serviced by"
+    Destination }o--|| Map : "located on"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> DirectionsProvided
+    DirectionsProvided --> AccessibilityHighlighted : accessibilityHighlighted
+    DirectionsProvided --> DistanceEstimated : distanceEstimated
+    AccessibilityHighlighted --> CustomRouteCreated : customRouteCreated
+    DistanceEstimated --> CustomRouteCreated : customRouteCreated
+    CustomRouteCreated --> LandmarksIdentified : landmarksIdentified
+    CustomRouteCreated --> TransportRecommended : transportRecommended
+    LandmarksIdentified --> [*]
+    TransportRecommended --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -95,8 +122,11 @@ graph TD
     F --> G{Within Venue?}
     G -->|Yes| H[identifyLandmarks]
     G -->|No| I[recommendTransport]
-    H --> J[Patron Departs]
-    I --> J
+    H --> J{Route Clear?}
+    J -->|Yes| K[Patron Departs]
+    J -->|No| L[updateRouteStatus]
+    L --> F
+    I --> K
 ```
 
 ## Actor Relationships

@@ -82,6 +82,34 @@ Treating acute illnesses, infections, or injuries involves the rapid assessment,
 | findPendingDischarges | Locate patients cleared for discharge awaiting instructions |
 | getTriageQueue | Retrieve patients awaiting assessment sorted by acuity |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TriageAssessment ||--|| AcuteDiagnosis : "leads to"
+    AcuteDiagnosis ||--|{ TreatmentOrder : generates
+    TreatmentOrder ||--o{ DiagnosticResult : "informed by"
+    AcuteDiagnosis ||--o| WoundRecord : "may include"
+    TreatmentOrder ||--|| DischargeInstructions : "ends with"
+    TriageAssessment ||--|{ DiagnosticResult : orders
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Triaged
+    Triaged --> DiagnosticsOrdered : diagnosticsOrdered
+    DiagnosticsOrdered --> Diagnosed : conditionDiagnosed
+    Diagnosed --> Treating : treatmentAdministered
+    Treating --> Stabilized : patientStabilized
+    Treating --> Treating : additionalTreatment
+    Stabilized --> Discharged : patientDischarged
+    Stabilized --> Admitted : patientAdmitted
+    Admitted --> [*]
+    Discharged --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,7 +120,9 @@ graph TD
     D --> E[stabilizePatient]
     E --> F{Admit?}
     F -->|Yes| G[admitPatient]
-    F -->|No| H[dischargePatient]
+    F -->|No| H{Stable for Discharge?}
+    H -->|Yes| I[dischargePatient]
+    H -->|No| D
 ```
 
 ## Actor Relationships

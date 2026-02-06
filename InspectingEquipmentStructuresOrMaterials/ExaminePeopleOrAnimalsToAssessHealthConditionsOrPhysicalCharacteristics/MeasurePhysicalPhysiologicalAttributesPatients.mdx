@@ -82,6 +82,36 @@ Patient physiological measurement involves capturing quantitative health data in
 | getAbnormals | Find measurements exceeding threshold values |
 | getCalibrations | List equipment verification records |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MeasurementSeries ||--|{ Measurement : "contains"
+    MeasurementSeries ||--|| Baseline : "compared against"
+    MeasurementSeries ||--|{ Threshold : "monitored by"
+    Measurement ||--o{ Threshold : "evaluated against"
+    Calibration }o--|| Measurement : "validates"
+    Trend }o--|| MeasurementSeries : "derived from"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Calibrated
+    Calibrated --> SeriesCreated : seriesCreated
+    SeriesCreated --> BaselineEstablished : baselineSet
+    BaselineEstablished --> Monitoring : measurementCaptured
+    Monitoring --> ThresholdAlert : thresholdExceeded
+    Monitoring --> Monitoring : measurementCaptured
+    ThresholdAlert --> Monitoring : measurementCaptured
+    ThresholdAlert --> TrendAnalysis : trendDetected
+    Monitoring --> TrendAnalysis : trendDetected
+    TrendAnalysis --> Reported : reportGenerated
+    Reported --> Monitoring : measurementCaptured
+    Reported --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,10 +122,13 @@ graph TD
     D --> E[captureMeasurement]
     E --> F{Threshold Exceeded?}
     F -->|Yes| G[Alert Provider]
-    F -->|No| H[Continue]
+    F -->|No| H[Continue Monitoring]
     G --> I[analyzeTrends]
     H --> I
-    I --> J[generateReport]
+    I --> J{Significant Trend?}
+    J -->|Yes| K[generateReport]
+    J -->|No| E
+    K --> E
 ```
 
 ## Actor Relationships

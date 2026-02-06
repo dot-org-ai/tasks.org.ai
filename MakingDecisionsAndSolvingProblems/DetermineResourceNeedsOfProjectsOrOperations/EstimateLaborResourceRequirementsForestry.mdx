@@ -80,6 +80,34 @@ Estimating labor and resource requirements for forestry, fishing, and agricultur
 | getHistoricalYields | Retrieve past yield data for a given parcel, species, or waterway |
 | getLaborAvailability | Check availability of seasonal workers by region and time period |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    OperationPlan ||--|{ LaborEstimate : "staffs"
+    OperationPlan ||--|{ EquipmentAllocation : "provisions"
+    YieldForecast ||--|| OperationPlan : "drives"
+    SeasonalCalendar ||--|| OperationPlan : "schedules"
+    ComplianceQuota ||--o{ OperationPlan : "constrains"
+    LaborEstimate }o--|| EquipmentAllocation : "coordinates-with"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> WorkloadAssessment
+    WorkloadAssessment --> YieldProjection : workloadAssessed
+    YieldProjection --> CrewPlanning : yieldForecasted
+    CrewPlanning --> EquipmentAssignment : crewSizeEstimated
+    EquipmentAssignment --> ComplianceCheck : equipmentAllocated
+    ComplianceCheck --> CrewPlanning : quotaExceeded
+    ComplianceCheck --> PlanReady : complianceVerified
+    PlanReady --> Adjusting : conditionsChanged
+    Adjusting --> CrewPlanning : estimatesAdjusted
+    PlanReady --> [*] : operationPlanBuilt
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,6 +120,9 @@ graph TD
     F -->|No| G[adjustForConditions]
     G --> C
     F -->|Yes| H[buildOperationPlan]
+    H --> I{Conditions Changed?}
+    I -->|Yes| G
+    I -->|No| J[Finalize Plan]
 ```
 
 ## Actor Relationships

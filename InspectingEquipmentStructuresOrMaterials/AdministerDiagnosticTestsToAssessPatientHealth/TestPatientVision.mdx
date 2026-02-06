@@ -87,6 +87,36 @@ Testing patient vision involves conducting standardized ophthalmic assessments t
 | getRetinalImages | Access retinal imaging records for a specific patient |
 | getAcuityTrends | Track visual acuity changes over time for a patient |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ExamRecord ||--|{ VisualAcuityResult : "contains"
+    ExamRecord ||--|{ RefractionData : "contains"
+    ExamRecord ||--o{ TonometryReading : "includes"
+    ExamRecord ||--o{ RetinalImage : "includes"
+    ExamRecord ||--o{ ColorVisionResult : "includes"
+    RefractionData ||--|| Prescription : "generates"
+    ExamRecord ||--o{ ReferralOrder : "may produce"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Ordered
+    Ordered --> AcuityTesting : acuityMeasured
+    AcuityTesting --> Refraction : refractionCompleted
+    Refraction --> PressureCheck : pressureMeasured
+    PressureCheck --> Imaging : retinalImageCaptured
+    Imaging --> ColorTesting : colorVisionAssessed
+    ColorTesting --> Evaluated : prescriptionGenerated
+    ColorTesting --> AbnormalFinding : abnormalityDetected
+    AbnormalFinding --> Referred : abnormalityDetected
+    Referred --> Evaluated : prescriptionGenerated
+    Evaluated --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -100,6 +130,9 @@ graph TD
     G -->|Yes| H[referToSpecialist]
     G -->|No| I[generatePrescription]
     H --> I
+    I --> J{Recheck Needed?}
+    J -->|Yes| B
+    J -->|No| K[Complete]
 ```
 
 ## Actor Relationships

@@ -82,6 +82,37 @@ Software performance testing measures how applications respond under different w
 | getProfiles | Fetch resource utilization data for application |
 | getBenchmarks | Get baseline metrics for comparison |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Application ||--o{ LoadTest : undergoes
+    Application ||--o{ StressTest : undergoes
+    Application ||--o{ PerformanceProfile : generates
+    LoadTest ||--|{ Bottleneck : reveals
+    StressTest ||--|{ Bottleneck : reveals
+    PerformanceProfile }o--|| Benchmark : "compared against"
+    LoadTest }o--|| Benchmark : "measured against"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> BenchmarkSet : benchmarkSet
+    BenchmarkSet --> LoadTestRunning : loadTestExecuted
+    LoadTestRunning --> LatencyAnalysis : latencyMeasured
+    LatencyAnalysis --> Profiling : performanceProfiled
+    Profiling --> Passed : resultsCompared
+    Profiling --> BottleneckFound : bottleneckIdentified
+    BottleneckFound --> Optimizing : remediate
+    Optimizing --> LoadTestRunning : retest
+    Passed --> StressTesting : stressTestRun
+    StressTesting --> Passed : resultsCompared
+    StressTesting --> BottleneckFound : bottleneckIdentified
+    Passed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -95,7 +126,9 @@ graph TD
     F --> H[Optimize]
     G --> I[compareResults]
     H --> B
-    I --> J[Report]
+    I --> J{Degradation?}
+    J -->|Yes| F
+    J -->|No| K[Report]
 ```
 
 ## Actor Relationships

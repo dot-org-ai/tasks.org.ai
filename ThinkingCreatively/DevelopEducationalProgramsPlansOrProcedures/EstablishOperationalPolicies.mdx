@@ -81,6 +81,36 @@ Establishing operational policies involves drafting governance rules, approval w
 | listApprovals | Enumerate recently adopted policies |
 | getComplianceStatus | Look up adherence data for an active policy |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    PolicyDocument ||--|| PolicyDraft : evolves_from
+    PolicyDocument ||--|| ApprovalRecord : authorizedBy
+    PolicyDocument ||--|| ComplianceChecklist : monitoredBy
+    PolicyDraft ||--|| ImpactAssessment : evaluates
+    PolicyRepository ||--|{ PolicyDocument : archives
+    ImpactAssessment }o--|| ApprovalRecord : informs
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> NeedIdentified
+    NeedIdentified --> Researching : needIdentified
+    Researching --> Drafting : bestPracticesResearched
+    Drafting --> Consultation : policyDrafted
+    Consultation --> LegalReview : stakeholdersConsulted
+    LegalReview --> Drafting : not compliant
+    LegalReview --> BoardApproval : legalReviewConducted
+    BoardApproval --> Drafting : not approved
+    BoardApproval --> Disseminated : approvalObtained
+    Disseminated --> Active : policyDisseminated
+    Active --> NeedIdentified : periodic review
+    Active --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -88,11 +118,13 @@ graph TD
     A[identifyNeed] --> B[researchBestPractices]
     B --> C[draftPolicy]
     C --> D[consultStakeholders]
-    D --> E[conductLegalReview]
-    E --> F{Compliant?}
-    F -->|No| C
-    F -->|Yes| G[obtainApproval]
-    G --> H[disseminatePolicy]
+    D --> E{Significant Objections?}
+    E -->|Yes| C
+    E -->|No| F[conductLegalReview]
+    F --> G{Compliant?}
+    G -->|No| C
+    G -->|Yes| H[obtainApproval]
+    H --> I[disseminatePolicy]
 ```
 
 ## Actor Relationships

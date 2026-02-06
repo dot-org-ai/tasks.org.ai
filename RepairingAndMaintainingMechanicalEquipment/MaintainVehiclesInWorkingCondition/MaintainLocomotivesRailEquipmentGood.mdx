@@ -83,6 +83,38 @@ Maintaining locomotives and rail equipment involves servicing diesel-electric an
 | getOverhaulSchedule | Retrieve upcoming major maintenance events for the fleet |
 | findComponentsByCondition | Locate traction motors, brakes, or other components due for replacement |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Locomotive ||--|{ TractionMotor : "powered by"
+    Locomotive ||--|| AirBrakeSystem : "braked by"
+    Locomotive ||--|| MaintenancePlan : "follows"
+    Locomotive ||--o{ InspectionRecord : "inspected in"
+    RailCar ||--|| AirBrakeSystem : "braked by"
+    RailCar ||--o{ InspectionRecord : "inspected in"
+    InspectionRecord ||--o{ MaintenancePlan : "scheduled by"
+    TractionMotor ||--o{ InspectionRecord : "assessed in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RevenueService
+    RevenueService --> ShopScheduled : shopTimeScheduled
+    ShopScheduled --> FRAInspection : fraInspectionConducted
+    FRAInspection --> ComponentSwap : wornComponentReplaced
+    FRAInspection --> Overhaul : scheduledOverhaulPerformed
+    ComponentSwap --> Overhaul : scheduledOverhaulPerformed
+    Overhaul --> BrakeTest : airBrakeSystemTested
+    BrakeTest --> RecordUpdate : maintenanceRecordUpdated
+    BrakeTest --> BrakeRepair : test failed
+    BrakeRepair --> BrakeTest : retest
+    RecordUpdate --> Certified : equipmentCertified
+    Certified --> RevenueService : returned to service
+```
+
 ## Workflow
 
 ```mermaid

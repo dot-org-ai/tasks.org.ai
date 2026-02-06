@@ -82,6 +82,35 @@ Developing plans for programs or services involves identifying needs, designing 
 | getReadinessAssessments | Find readiness evaluations by plan or status |
 | findResourceAllocations | Search resource assignments by plan or budget category |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ServicePlan ||--|| ProgramDesign : implements
+    ServicePlan ||--|{ ResourceAllocation : allocates
+    ServicePlan ||--|| ReadinessAssessment : evaluatedBy
+    ServicePlan ||--|| DeliveryModel : delivers_through
+    ServicePlan ||--|| ImplementationTimeline : scheduledBy
+    ReadinessAssessment }o--|| ResourceAllocation : checks
+    ProgramDesign }o--|| DeliveryModel : defines
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> NeedIdentified
+    NeedIdentified --> ModelDesigned : serviceNeedIdentified
+    ModelDesigned --> PlanDeveloped : serviceModelDesigned
+    PlanDeveloped --> Resourced : servicePlanDeveloped
+    Resourced --> ReadinessCheck : resourcesAllocated
+    ReadinessCheck --> PlanDeveloped : not ready
+    ReadinessCheck --> Approved : launchReadinessAssessed
+    Approved --> Implementation : servicePlanApproved
+    Implementation --> PlanDeveloped : servicePlanRevised
+    Implementation --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,10 +120,11 @@ graph TD
     C --> D[allocateResources]
     D --> E[assessLaunchReadiness]
     E --> F{Ready?}
-    F -->|Yes| G[approveServicePlan]
-    F -->|No| H[reviseServicePlan]
-    H --> C
-    G --> I[Begin Implementation]
+    F -->|No| G{Resource or Design Gap?}
+    G -->|Resources| D
+    G -->|Design| B
+    F -->|Yes| H[approveServicePlan]
+    H --> I[Begin Implementation]
 ```
 
 ## Actor Relationships

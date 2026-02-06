@@ -82,6 +82,35 @@ Financial information verification ensures that accounting records, balances, an
 | getVariances | Find differences between expected and actual |
 | getUnapprovedEntries | List journal entries pending review |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    GeneralLedger ||--|{ JournalEntry : contains
+    JournalEntry ||--|| AccountBalance : affects
+    AccountBalance ||--|| Reconciliation : "verified by"
+    GeneralLedger ||--|| FinancialStatement : "reported in"
+    JournalEntry ||--o{ Variance : "may produce"
+    Reconciliation ||--o{ Variance : "may reveal"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> EntryPosted
+    EntryPosted --> Verifying : verifyLedgerEntry
+    Verifying --> BalanceCheck : ledgerEntryVerified
+    BalanceCheck --> Reconciling : balanceChecked
+    Reconciling --> Reconciled : accountReconciled
+    Reconciling --> AnomalyFound : anomalyDetected
+    AnomalyFound --> Correcting : correctEntry
+    Correcting --> EntryPosted : entryCorrected
+    Reconciled --> Reporting : validateReporting
+    Reporting --> Approved : financialsApproved
+    Approved --> [*]
+```
+
 ## Workflow
 
 ```mermaid

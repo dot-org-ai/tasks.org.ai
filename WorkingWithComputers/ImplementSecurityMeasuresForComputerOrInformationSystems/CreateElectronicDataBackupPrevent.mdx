@@ -83,6 +83,36 @@ Creating electronic data backups involves planning, executing, and verifying cop
 | findExpiredBackups | List backup sets past their retention period |
 | getStorageUsage | Query backup storage consumption by target or tier |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    BackupJob ||--|{ BackupSet : "produces"
+    BackupSet ||--|{ RecoveryPoint : "creates"
+    RetentionPolicy ||--|| BackupSet : "governs"
+    StorageTarget ||--|{ BackupSet : "holds"
+    RestoreRequest ||--|| RecoveryPoint : "restores from"
+    BackupReport }o--|| BackupJob : "summarizes"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Scheduled
+    Scheduled --> Running : backupStarted
+    Running --> Completed : backupCompleted
+    Running --> Failed : backupFailed
+    Failed --> Running : retried
+    Completed --> Verified : backupVerified
+    Verified --> Archived : rotateStorage
+    Archived --> Expired : retentionExpired
+    Expired --> [*]
+    Verified --> Restoring : restoreRequested
+    Restoring --> Restored : dataRestored
+    Restored --> [*]
+```
+
 ## Workflow
 
 ```mermaid

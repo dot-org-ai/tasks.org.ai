@@ -82,6 +82,35 @@ Developing treatment plans for patients or clients involves synthesizing diagnos
 | findGuidelinesForDiagnosis | Retrieve clinical guidelines applicable to a diagnosis |
 | getPendingApprovals | List treatment plans awaiting authorization |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TreatmentPlan ||--|| Diagnosis : addresses
+    TreatmentPlan ||--|{ Intervention : includes
+    TreatmentPlan ||--|{ Goal : defines
+    TreatmentPlan ||--|| CareEpisode : spans
+    ClinicalGuideline }o--|| Intervention : informs
+    Goal }o--|| CareEpisode : trackedWithin
+    Diagnosis }o--|| ClinicalGuideline : references
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Assessment
+    Assessment --> DiagnosticReview : patientAssessed
+    DiagnosticReview --> InterventionSelection : diagnosticsReviewed
+    InterventionSelection --> GoalSetting : interventionsSelected
+    GoalSetting --> Drafting : goalsEstablished
+    Drafting --> Approval : planDrafted
+    Approval --> InterventionSelection : not approved
+    Approval --> Active : planApproved
+    Active --> Assessment : periodic review
+    Active --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,8 +121,10 @@ graph TD
     D --> E[draftPlan]
     E --> F[submitForApproval]
     F --> G{Approved?}
-    G -->|Yes| H[activatePlan]
-    G -->|No| C
+    G -->|No| H{Clinical or Payer Issue?}
+    H -->|Clinical| C
+    H -->|Payer| E
+    G -->|Yes| I[activatePlan]
 ```
 
 ## Actor Relationships

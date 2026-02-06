@@ -83,6 +83,34 @@ Operating on patients to treat conditions encompasses the full surgical lifecycl
 | findPendingConsents | Locate patients who have not yet provided surgical consent |
 | getRecoveryStatus | Retrieve postoperative recovery progress for a patient |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    SurgicalCase ||--|| ConsentForm : requires
+    SurgicalCase ||--|| OperativeReport : "documented in"
+    SurgicalCase ||--|| AnesthesiaRecord : "monitored via"
+    SurgicalCase ||--|{ SurgicalInstrumentSet : uses
+    SurgicalCase ||--|| RecoveryPlan : "followed by"
+    OperativeReport }o--|| RecoveryPlan : informs
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Evaluated
+    Evaluated --> Consented : consentObtained
+    Consented --> Scheduled : surgeryScheduled
+    Scheduled --> InSurgery : procedurePerformed
+    InSurgery --> Documented : procedureDocumented
+    Documented --> Recovering : recoveryMonitored
+    Recovering --> Recovering : ongoingMonitoring
+    Recovering --> Discharged : patientDischarged
+    Recovering --> InSurgery : reoperation
+    Discharged --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,8 +122,10 @@ graph TD
     E --> F[monitorRecovery]
     F --> G{Stable?}
     G -->|Yes| H[dischargePatient]
-    G -->|No| I[Continue Monitoring]
-    I --> F
+    G -->|No| I{Complication?}
+    I -->|Yes| J[Return to OR]
+    I -->|No| F
+    J --> D
 ```
 
 ## Actor Relationships

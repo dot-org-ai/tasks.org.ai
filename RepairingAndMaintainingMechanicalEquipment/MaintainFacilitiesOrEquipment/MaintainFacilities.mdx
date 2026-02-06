@@ -81,6 +81,39 @@ Maintaining facilities involves conducting regular inspections, managing correct
 | getMaintenanceSchedules | Find scheduled maintenance by facility or system type |
 | findAssets | Search facility assets by type, location, or condition |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Facility ||--|{ Asset : "contains"
+    Facility ||--o{ WorkOrder : "subject of"
+    Facility ||--o{ InspectionRecord : "assessed by"
+    Facility ||--|| MaintenanceSchedule : "follows"
+    WorkOrder }o--|| Asset : "targets"
+    InspectionRecord ||--o{ WorkOrder : "generates"
+    Facility ||--o{ ComplianceRecord : "tracked in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Operational
+    Operational --> UnderInspection : facilityConditionAssessed
+    UnderInspection --> WorkOrderPending : workOrderCreated
+    UnderInspection --> Scheduled : preventiveMaintenanceScheduled
+    WorkOrderPending --> Assigned : workOrderAssigned
+    Assigned --> InProgress : maintenanceTaskExecuted
+    InProgress --> Verifying : completionVerified
+    Verifying --> Operational : satisfactory
+    Verifying --> Assigned : rework needed
+    Scheduled --> Operational : maintenance completed
+    Operational --> ComplianceReview : complianceInspectionRecorded
+    ComplianceReview --> Operational : passed
+    ComplianceReview --> WorkOrderPending : remediation needed
+    Operational --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,9 +125,12 @@ graph TD
     E --> F[executeMaintenanceTask]
     F --> G[verifyCompletion]
     G --> H{Satisfactory?}
-    H -->|Yes| I[Close Work Order]
+    H -->|Yes| I[recordComplianceInspection]
     H -->|No| J[Reassign Work]
     J --> E
+    I --> K{Compliant?}
+    K -->|Yes| L[Close Work Order]
+    K -->|No| C
     D --> A
 ```
 

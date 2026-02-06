@@ -83,6 +83,35 @@ Compiling operational data involves gathering information from multiple sources 
 | getReports | Locate completed compilation reports by period or topic |
 | getDataTrends | Query aggregated data over time for trend analysis |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    DataSource ||--|{ DataRecord : generates
+    CompilationJob ||--|{ DataSource : pulls_from
+    DataRecord }|--|| DataSet : "aggregated into"
+    DataRecord ||--o{ DataException : "may produce"
+    DataSet ||--|| CompilationReport : "summarized in"
+    CompilationJob ||--|{ ValidationRule : applies
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Defined
+    Defined --> Collecting : compilationDefined
+    Collecting --> Collected : dataCollected
+    Collected --> Validating : validateRecords
+    Validating --> ExceptionFound : exceptionDetected
+    ExceptionFound --> Validating : resolveException
+    Validating --> Validated : recordsValidated
+    Validated --> Aggregated : dataAggregated
+    Aggregated --> ReportReady : reportGenerated
+    ReportReady --> Distributed : reportDistributed
+    Distributed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -152,7 +181,7 @@ compiler.exceptionDetected(async ({ jobId, recordId, reason }) => {
 compiler.reportGenerated(async ({ jobId, reportId }) => {
   await compiler.distributeReport({
     reportId,
-    recipients: ['coo@company.com', 'vp-ops@company.com']
+    recipients: ['coo@company.com.ai', 'vp-ops@company.com.ai']
   })
 })
 ```

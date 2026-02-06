@@ -82,6 +82,35 @@ Watching operating equipment to detect malfunctions involves real-time monitorin
 | getRepairTickets | Find repair tickets by priority, assignee, or status |
 | getDowntimeHistory | Retrieve equipment downtime records by asset or period |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Malfunction ||--|{ FaultCode : "identified by"
+    Malfunction ||--o| EmergencyStop : "may trigger"
+    Malfunction ||--|| RepairTicket : "resolved via"
+    Malfunction ||--o| RootCauseAnalysis : "investigated through"
+    RepairTicket ||--|| DowntimeRecord : "tracked in"
+    RootCauseAnalysis }o--|| FaultCode : "explains"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Operating
+    Operating --> MalfunctionDetected : malfunctionReported
+    MalfunctionDetected --> EmergencyStopped : emergencyStopInitiated
+    MalfunctionDetected --> Classified : faultClassified
+    EmergencyStopped --> Classified : faultClassified
+    Classified --> RepairInProgress : repairTicketCreated
+    RepairInProgress --> Diagnosing : diagnosisCompleted
+    Diagnosing --> Repaired : repairComplete
+    Repaired --> Cleared : malfunctionCleared
+    Cleared --> Operating : downtimeRecorded
+    Diagnosing --> RepairInProgress : additionalRepairNeeded
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,9 +121,11 @@ graph TD
     C --> D
     D --> E[createRepairTicket]
     E --> F[performDiagnosis]
-    F --> G[Execute Repair]
-    G --> H[clearMalfunction]
-    H --> I[recordDowntime]
+    F --> G{Root Cause Found?}
+    G -->|Yes| H[Execute Repair]
+    G -->|No| F
+    H --> I[clearMalfunction]
+    I --> J[recordDowntime]
 ```
 
 ## Actor Relationships

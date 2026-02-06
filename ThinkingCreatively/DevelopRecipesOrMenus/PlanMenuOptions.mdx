@@ -81,17 +81,46 @@ Planning menu options involves designing food and beverage offerings for restaur
 | getCostSheets | Find cost analysis sheets by menu or margin threshold |
 | getNutritionalProfiles | Retrieve nutritional data by allergen type or calorie range |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Menu ||--|{ MenuItem : contains
+    Menu ||--|{ MenuCategory : organizedBy
+    MenuItem ||--|| NutritionalProfile : describes
+    MenuItem ||--|| CostSheet : costedBy
+    SeasonalCalendar ||--|{ Menu : rotates
+    MenuCategory ||--|{ MenuItem : groups
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Created
+    Created --> ItemsAdded : menuCreated
+    ItemsAdded --> Costed : menuItemAdded
+    Costed --> NutritionReview : foodCostCalculated
+    NutritionReview --> ItemsAdded : out of targets
+    NutritionReview --> SeasonalSetup : nutritionAnalyzed
+    SeasonalSetup --> Approval : seasonalRotationSet
+    Approval --> Published : menuApproved
+    Published --> Created : new season
+    Published --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[createMenu] --> B[addMenuItem]
     B --> C[calculateFoodCost]
-    C --> D[analyzeNutrition]
-    D --> E{Within Targets?}
-    E -->|No| F[Adjust Items]
-    F --> B
-    E -->|Yes| G[setSeasonalRotation]
+    C --> D{Cost Within Margin?}
+    D -->|No| B
+    D -->|Yes| E[analyzeNutrition]
+    E --> F{Nutrition Compliant?}
+    F -->|No| B
+    F -->|Yes| G[setSeasonalRotation]
     G --> H[approveMenu]
     H --> I[publishMenu]
 ```

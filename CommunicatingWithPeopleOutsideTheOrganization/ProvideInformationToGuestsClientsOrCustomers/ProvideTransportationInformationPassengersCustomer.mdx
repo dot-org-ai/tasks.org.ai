@@ -82,6 +82,35 @@ Transportation information delivery involves providing schedules, routes, fares,
 | getFares | Find pricing for specific routes and services |
 | getServiceStatus | Check real-time delays and disruptions |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Route ||--|| Schedule : "timed by"
+    Route ||--|{ Connection : "includes"
+    Route ||--|| Fare : "priced at"
+    ServiceStatus }o--|| Route : "affects"
+    Route ||--o{ Accommodation : "offers"
+    Connection }o--|| Schedule : "synchronized via"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ScheduleProvided
+    ScheduleProvided --> RouteDescribed : routeDescribed
+    ScheduleProvided --> FareQuoted : fareQuoted
+    RouteDescribed --> ConnectionPlanned : connectionPlanned
+    FareQuoted --> AccommodationArranged : accommodationArranged
+    ConnectionPlanned --> AccommodationArranged : accommodationArranged
+    FareQuoted --> ServiceStatusUpdated : serviceStatusUpdated
+    AccommodationArranged --> ServiceStatusUpdated : serviceStatusUpdated
+    ServiceStatusUpdated --> AlertIssued : alertIssued
+    ServiceStatusUpdated --> [*]
+    AlertIssued --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,14 +120,17 @@ graph TD
     C -->|Yes| D[describeRoute]
     C -->|No| E[quoteFare]
     D --> F[planConnection]
+    F --> E
     E --> G{Special Needs?}
-    F --> G
     G -->|Yes| H[arrangeAccommodation]
     G -->|No| I[updateServiceStatus]
     H --> I
     I --> J{Disruption?}
     J -->|Yes| K[issueAlert]
     J -->|No| L[Journey Begins]
+    K --> M{Alternative Available?}
+    M -->|Yes| B
+    M -->|No| N[Wait for Resolution]
 ```
 
 ## Actor Relationships

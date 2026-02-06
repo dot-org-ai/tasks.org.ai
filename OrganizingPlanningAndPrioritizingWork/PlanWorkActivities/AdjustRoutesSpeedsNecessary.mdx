@@ -81,6 +81,34 @@ Adjusting routes and speeds involves monitoring real-time conditions such as tra
 | getSpeedHistory | Access historical speed profiles for a vehicle or route segment |
 | getDeliveryStatus | Check estimated versus actual arrival times for active deliveries |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Route ||--|{ SpeedProfile : "defines"
+    Route ||--o{ TrafficIncident : "affectedBy"
+    Route ||--o{ WeatherAlert : "impactedBy"
+    Route ||--|| DeliveryWindow : "constrainedBy"
+    TelematicsRecord }o--|| Route : "tracksProgressOn"
+    TelematicsRecord ||--|| SpeedProfile : "measures"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Monitoring
+    Monitoring --> IssueDetected : conditionDetected
+    IssueDetected --> Calculating : evaluateImpact
+    Calculating --> Rerouting : alternateRouteCalculated
+    Calculating --> SpeedChange : speedAdjustmentNeeded
+    SpeedChange --> DriverUpdated : driverNotified
+    Rerouting --> DriverUpdated : vehicleRerouted
+    DriverUpdated --> Validating : validateCompliance
+    Validating --> Monitoring : complianceValidated
+    Validating --> Calculating : nonCompliant
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,8 +120,10 @@ graph TD
     D --> E[notifyDriver]
     E --> F[reroute]
     F --> G[validateCompliance]
-    G --> H[logAdjustment]
-    H --> A
+    G --> H{Compliant?}
+    H -->|No| C
+    H -->|Yes| I[logAdjustment]
+    I --> A
 ```
 
 ## Actor Relationships

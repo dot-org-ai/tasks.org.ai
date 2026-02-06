@@ -81,6 +81,38 @@ Production equipment and tool repair involves responding to breakdowns or schedu
 | getDowntimeHistory | Look up equipment downtime records by period or failure type |
 | findToolsDueForService | Identify tools approaching their resharpening or replacement interval |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ProductionEquipment ||--o{ BreakdownReport : "documented in"
+    ProductionEquipment ||--o{ RepairOrder : "serviced via"
+    ProductionEquipment ||--o{ DowntimeRecord : "tracked in"
+    ProductionEquipment ||--o| SparePartsKit : "stocked for"
+    ProductionTool ||--o{ RepairOrder : "serviced via"
+    BreakdownReport ||--|| RepairOrder : "generates"
+    RepairOrder ||--o{ DowntimeRecord : "produces"
+    SparePartsKit ||--o{ RepairOrder : "consumed by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> InProduction
+    InProduction --> BreakdownReported : breakdownTriaged
+    BreakdownReported --> RepairScheduled : repairOrderCreated
+    RepairScheduled --> MachineRepair : machineRepaired
+    RepairScheduled --> ToolRepair : toolRepaired
+    MachineRepair --> Testing : equipmentTested
+    ToolRepair --> Testing : equipmentTested
+    Testing --> RepairScheduled : test failed
+    Testing --> Released : equipmentReleasedToProduction
+    Released --> InProduction
+    InProduction --> ChronicReview : chronicFailureIdentified
+    ChronicReview --> BreakdownReported : breakdownTriaged
+```
+
 ## Workflow
 
 ```mermaid

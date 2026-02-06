@@ -79,18 +79,49 @@ Moving patients to or from treatment areas involves the physical transfer of pat
 | getTransportHistory | Retrieve completed transport records for a specific patient |
 | getTransporterAvailability | Check which transporters are available and their current locations |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TransportRequest ||--|| PatientRecord : references
+    TransportRequest ||--|| TransportEquipment : requires
+    TransportRequest ||--|| Route : follows
+    TransportRequest ||--|| SafetyChecklist : validates
+    TransportRequest ||--|| Handoff : "completes with"
+    PatientRecord ||--|| Handoff : "transferred via"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Requested
+    Requested --> Verified : patientVerified
+    Verified --> Assigned : transporterAssigned
+    Assigned --> InTransit : patientInTransit
+    InTransit --> Delivered : patientDelivered
+    Delivered --> HandedOff : handoffCompleted
+    HandedOff --> Documented : transportDocumented
+    Documented --> [*]
+    Verified --> Requested : verificationFailed
+    InTransit --> Assigned : routeBlocked
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[requestTransport] --> B[assignTransporter]
     B --> C[verifyPatient]
-    C --> D[movePatient]
-    D --> E[performHandoff]
-    E --> F[documentTransport]
-    F --> G{More Transports?}
-    G -->|Yes| A
-    G -->|No| H[Shift Complete]
+    C --> D{Safety Checks Pass?}
+    D -->|Yes| E[movePatient]
+    D -->|No| F[Resolve Safety Issue]
+    F --> C
+    E --> G[performHandoff]
+    G --> H[documentTransport]
+    H --> I{More Transports?}
+    I -->|Yes| A
+    I -->|No| J[Shift Complete]
 ```
 
 ## Actor Relationships

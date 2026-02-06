@@ -80,6 +80,35 @@ Establishing treatment goals involves collaborating with patients and care teams
 | getBenchmarks | Retrieve evidence-based benchmarks for a condition or intervention |
 | findOverdueGoals | List goals that have not met expected milestones on schedule |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TreatmentGoal ||--|{ GoalMilestone : contains
+    TreatmentGoal ||--|| Assessment : basedOn
+    TreatmentGoal ||--|| Benchmark : comparedTo
+    TreatmentGoal ||--|| PatientPriority : reflects
+    GoalReview }o--|| TreatmentGoal : evaluates
+    GoalMilestone }o--|| Benchmark : measured_against
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ClinicalAssessment
+    ClinicalAssessment --> PriorityGathering : assessmentCompleted
+    PriorityGathering --> GoalDefinition : prioritiesGathered
+    GoalDefinition --> MilestoneSetup : goalDefined
+    MilestoneSetup --> Prioritization : milestonesSet
+    Prioritization --> Approved : goalsPrioritized
+    Approved --> Monitoring : goalsApproved
+    Monitoring --> Achieved : milestoneReached
+    Monitoring --> Monitoring : continue tracking
+    Achieved --> GoalDefinition : new goals needed
+    Achieved --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,7 +121,12 @@ graph TD
     F --> G[reviewGoalProgress]
     G --> H{Milestone Reached?}
     H -->|Yes| I[Update Progress]
-    H -->|No| G
+    I --> J{All Goals Met?}
+    J -->|No| G
+    J -->|Yes| K[Complete]
+    H -->|No| L{Adjust Goals?}
+    L -->|Yes| C
+    L -->|No| G
 ```
 
 ## Actor Relationships

@@ -82,6 +82,36 @@ Physical condition checking involves systematic observation, measurement, and do
 | getRecommendations | Find follow-up guidance by subject or examiner |
 | getFitnessClearances | List subjects cleared for activity |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ExaminationRecord ||--|{ VitalSigns : "contains"
+    ExaminationRecord ||--|{ PhysicalMeasurement : "contains"
+    ExaminationRecord ||--o{ MobilityAssessment : "includes"
+    ExaminationRecord ||--o{ SystemsReview : "includes"
+    ExaminationRecord ||--|{ Recommendation : "produces"
+    SystemsReview }o--|| VitalSigns : "references"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Scheduled
+    Scheduled --> VitalsRecorded : vitalsMeasured
+    VitalsRecorded --> PhysicalInspection : physicallyInspected
+    PhysicalInspection --> MobilityCheck : mobilityAssessed
+    MobilityCheck --> SystemsCheck : systemsReviewed
+    SystemsCheck --> AbnormalFound : systemsReviewed
+    SystemsCheck --> NormalFindings : findingsDocumented
+    AbnormalFound --> AdditionalTesting : systemsReviewed
+    AdditionalTesting --> Documented : findingsDocumented
+    NormalFindings --> Documented : findingsDocumented
+    Documented --> Recommended : recommendationsMade
+    Recommended --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,9 +122,11 @@ graph TD
     D --> E[performSystemsReview]
     E --> F{Abnormal?}
     F -->|Yes| G[Order Tests]
-    F -->|No| H[documentFindings]
-    G --> H
-    H --> I[makeRecommendations]
+    G --> H{Results OK?}
+    H -->|No| I[documentFindings]
+    H -->|Yes| I
+    F -->|No| I
+    I --> J[makeRecommendations]
 ```
 
 ## Actor Relationships

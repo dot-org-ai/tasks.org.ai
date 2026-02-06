@@ -82,6 +82,37 @@ Monitoring medical equipment involves continuously tracking the performance and 
 | getDeviceIncidents | Find device incidents by type, severity, or date range |
 | getAlarmHistory | Retrieve alarm records by device, type, or time period |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MedicalDevice ||--|{ DeviceStatus : "has"
+    MedicalDevice ||--o{ ClinicalAlarm : "generates"
+    MedicalDevice ||--o{ PreventiveMaintenance : "scheduled for"
+    MedicalDevice ||--o{ DeviceIncident : "subject of"
+    MedicalDevice ||--o{ RecallNotice : "affected by"
+    ClinicalAlarm }o--|| DeviceIncident : "may escalate to"
+    PreventiveMaintenance }o--|| DeviceStatus : "updates"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> InService
+    InService --> Alarming : alarmResponded
+    Alarming --> InService : alarmResolved
+    Alarming --> OutOfService : deviceIncidentReported
+    InService --> MaintenanceDue : preventiveMaintenanceScheduled
+    MaintenanceDue --> UnderMaintenance : maintenanceStarted
+    UnderMaintenance --> Certified : deviceCertifiedReady
+    Certified --> InService : returnedToService
+    OutOfService --> UnderMaintenance : repairInitiated
+    InService --> Recalled : recallProcessed
+    Recalled --> OutOfService : deviceRemoved
+    Recalled --> InService : recallCleared
+```
+
 ## Workflow
 
 ```mermaid
@@ -96,6 +127,7 @@ graph TD
     F -->|No| H
     H --> I[Repair or Replace]
     I --> D
+    E --> A
 ```
 
 ## Actor Relationships

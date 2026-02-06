@@ -82,21 +82,52 @@ Animal behavior and condition monitoring involves systematic observation of anim
 | getAlerts | Find active alerts by severity or type |
 | getTrends | View health or behavior trends over time |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Animal ||--|{ Observation : "subject of"
+    Animal ||--|| HealthRecord : "has"
+    Animal ||--o{ BehaviorPattern : "exhibits"
+    Animal ||--o{ Alert : "triggers"
+    Observation ||--o{ Metric : "includes"
+    BehaviorPattern }o--|| Observation : "identified from"
+    HealthRecord ||--o{ Metric : "tracks"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Monitoring
+    Monitoring --> Observed : observationRecorded
+    Observed --> Healthy : conditionAssessed
+    Observed --> AbnormalFound : abnormalityDetected
+    Healthy --> Monitoring : metricTracked
+    AbnormalFound --> ExamPending : examScheduled
+    AbnormalFound --> Critical : criticalAlertRaised
+    Critical --> ExamPending : examScheduled
+    ExamPending --> CareUpdated : careProtocolUpdated
+    CareUpdated --> Monitoring : observationRecorded
+    Healthy --> CareUpdated : careProtocolUpdated
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[recordObservation] --> B{Abnormality?}
     B -->|Yes| C[detectAbnormality]
-    B -->|No| D[Continue Monitoring]
+    B -->|No| D[trackMetric]
     C --> E{Critical?}
-    E -->|Yes| F[Immediate Response]
+    E -->|Yes| F[Immediate Veterinary Response]
     E -->|No| G[scheduleExam]
-    F --> H[Veterinarian Consult]
-    G --> I[assessCondition]
-    I --> J[updateCareProtocol]
-    J --> K[trackMetric]
-    D --> K
+    F --> H[assessCondition]
+    G --> H
+    H --> I[updateCareProtocol]
+    I --> J[trackMetric]
+    D --> J
+    J --> A
 ```
 
 ## Actor Relationships

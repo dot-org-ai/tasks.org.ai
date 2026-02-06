@@ -79,19 +79,47 @@ Customer seating assistance involves managing table availability, accommodating 
 | getWaitList | View the current walk-in queue with estimated wait times |
 | getTableHistory | Review occupancy and turnover records for a table |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Reservation ||--|| Table : books
+    Table ||--|| SeatingChart : "located in"
+    WaitList ||--|{ Table : "awaits"
+    GuestPreference }o--|| Table : "applied to"
+    Table ||--|{ TurnoverRecord : tracks
+    Reservation ||--o| GuestPreference : includes
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> AvailabilityChecked
+    AvailabilityChecked --> Seated : guestSeated
+    AvailabilityChecked --> OnWaitList : waitListUpdated
+    OnWaitList --> Seated : guestSeated
+    Seated --> PreferenceApplied : preferenceAccommodated
+    PreferenceApplied --> Occupied : tableStatusChanged
+    Occupied --> Cleared : tableCleared
+    Cleared --> AvailabilityChecked : readyForNext
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[checkAvailability] --> B{Table Open?}
-    B -->|Yes| C[seatGuest]
+    B -->|Yes| C{Preference Match?}
     B -->|No| D[addToWaitList]
-    D --> E[Wait for Table]
-    E --> C
-    C --> F[accommodatePreference]
-    F --> G[updateTableStatus]
-    G --> H[clearTable]
-    H --> A
+    C -->|Yes| E[seatGuest]
+    C -->|No| F[accommodatePreference]
+    F --> E
+    D --> G[Wait for Table]
+    G --> E
+    E --> H[updateTableStatus]
+    H --> I[clearTable]
+    I --> A
 ```
 
 ## Actor Relationships

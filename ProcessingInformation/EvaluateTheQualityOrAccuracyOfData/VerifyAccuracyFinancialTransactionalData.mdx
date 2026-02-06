@@ -82,6 +82,34 @@ Financial transactional data verification ensures that payments, invoices, recei
 | getUnreconciled | Find settlements not matched to transactions |
 | getPendingValidation | List transactions awaiting verification |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Transaction ||--|| Invoice : "billed by"
+    Transaction ||--|| Payment : "settled by"
+    Payment ||--|| Settlement : "cleared in"
+    Transaction ||--|| Receipt : proves
+    Transaction ||--o{ Mismatch : "may have"
+    Invoice ||--o{ Mismatch : "may trigger"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> PendingVerification
+    PendingVerification --> PaymentChecked : paymentValidated
+    PaymentChecked --> InvoiceMatched : invoiceMatched
+    InvoiceMatched --> SettlementReconciled : settlementReconciled
+    SettlementReconciled --> Approved : transactionApproved
+    PaymentChecked --> MismatchFound : mismatchDetected
+    InvoiceMatched --> MismatchFound : mismatchDetected
+    MismatchFound --> Correcting : correctTransaction
+    Correcting --> PendingVerification : transactionCorrected
+    Approved --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -153,8 +181,8 @@ transactions.mismatchDetected(async ({ transactionId, expectedAmount, actualAmou
 })
 
 // Auto-approve small exact matches
-transactions.invoiceMatched(async ({ invoiceId, paymentId, matchConfidence }) => {
-  if (matchConfidence === 1.0 && invoice.amount < 500) {
+transactions.invoiceMatched(async ({ invoiceId, paymentId, matchConfidence, amount }) => {
+  if (matchConfidence === 1.0 && amount < 500) {
     await transactions.approveTransaction({ transactionId: paymentId })
   }
 })

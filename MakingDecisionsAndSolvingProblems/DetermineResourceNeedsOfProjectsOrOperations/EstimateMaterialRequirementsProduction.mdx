@@ -80,6 +80,36 @@ Estimating material requirements for production involves analyzing production or
 | getShortages | Find materials with insufficient inventory for planned production |
 | getLeadTimes | Look up supplier lead times for specific materials |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ProductionOrder ||--|{ BillOfMaterials : "explodes-into"
+    BillOfMaterials ||--|{ MaterialRequirement : "generates"
+    MaterialRequirement }o--|| InventoryLevel : "checked-against"
+    MaterialRequirement ||--o{ PurchaseRequisition : "triggers"
+    PurchaseRequisition }o--|| LeadTime : "constrained-by"
+    ProductionOrder }o--|| LeadTime : "scheduled-around"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Calculating
+    Calculating --> InventoryCheck : requirementsCalculated
+    InventoryCheck --> Sufficient : stockAvailable
+    InventoryCheck --> ShortageDetected : shortageIdentified
+    ShortageDetected --> YieldAdjusted : adjustForYield
+    YieldAdjusted --> RequisitionPending : requisitionGenerated
+    RequisitionPending --> LeadTimeCheck : requisitionGenerated
+    LeadTimeCheck --> Sufficient : leadTimeOK
+    LeadTimeCheck --> Escalated : leadTimeExceeded
+    Escalated --> RequisitionPending : alternativeSourced
+    Sufficient --> Consolidated : requirementsConsolidated
+    Consolidated --> [*]
+```
+
 ## Workflow
 
 ```mermaid

@@ -79,6 +79,32 @@ Determining the types of equipment, tools, and materials needed for jobs involve
 | getMaterialsByJob | Retrieve the material list for a specific job or project |
 | getAvailableInventory | Check current stock levels for specified tools or materials |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    JobSpecification ||--|{ MaterialList : "requires"
+    JobSpecification ||--o{ ResourceRecommendation : "produces"
+    EquipmentCatalog ||--o{ ResourceRecommendation : "sources"
+    ResourceRecommendation ||--o{ ComplianceCertificate : "validated-by"
+    ResourceRecommendation ||--|| MaterialList : "finalizes"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> AnalyzingRequirements
+    AnalyzingRequirements --> SearchingCatalog : jobRequirementsAnalyzed
+    SearchingCatalog --> EvaluatingOptions : catalogSearched
+    EvaluatingOptions --> ResourcesChosen : optionsEvaluated
+    ResourcesChosen --> ComplianceCheck : resourcesSelected
+    ComplianceCheck --> EvaluatingOptions : complianceFailed
+    ComplianceCheck --> MaterialListReady : complianceValidated
+    MaterialListReady --> Submitted : materialListGenerated
+    Submitted --> [*] : procurementSubmitted
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,7 +116,9 @@ graph TD
     E --> F{Compliant?}
     F -->|No| C
     F -->|Yes| G[generateMaterialList]
-    G --> H[submitForProcurement]
+    G --> H{Budget Approved?}
+    H -->|No| C
+    H -->|Yes| I[submitForProcurement]
 ```
 
 ## Actor Relationships

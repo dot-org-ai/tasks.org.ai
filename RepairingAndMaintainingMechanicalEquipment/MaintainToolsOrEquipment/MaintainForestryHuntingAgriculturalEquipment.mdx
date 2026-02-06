@@ -82,6 +82,38 @@ Maintaining forestry, hunting, and agricultural equipment involves servicing tra
 | findExpiredCertifications | Locate equipment with lapsed compliance certificates |
 | getPartInventory | Check available parts stock at a specific depot or site |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    FieldEquipment ||--|| MaintenanceSchedule : "follows"
+    FieldEquipment ||--o{ ServiceRecord : "tracked in"
+    FieldEquipment ||--o{ ComplianceCertificate : "certified by"
+    FieldEquipment ||--o{ WorkOrder : "serviced via"
+    WorkOrder ||--o{ PartInventory : "consumes from"
+    MaintenanceSchedule ||--o{ WorkOrder : "generates"
+    ServiceRecord ||--o{ ComplianceCertificate : "supports"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> SeasonalPrep : seasonalServiceScheduled
+    SeasonalPrep --> Inspecting : equipmentInspected
+    Inspecting --> PartsOrdered : replacementPartsOrdered
+    Inspecting --> FieldService : fieldMaintenancePerformed
+    PartsOrdered --> FieldService : parts received
+    FieldService --> Documented : serviceCompletionRecorded
+    Documented --> ComplianceCheck : complianceCertified
+    Documented --> Active : no certification due
+    ComplianceCheck --> Active : certified
+    Active --> Decommissioned : equipmentDecommissioned
+    Active --> Idle : season ends
+    Decommissioned --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,8 +126,10 @@ graph TD
     E --> F[recordServiceCompletion]
     F --> G{Compliance Due?}
     G -->|Yes| H[certifyCompliance]
-    G -->|No| I[Return to Service]
+    G -->|No| I{End of Life?}
     H --> I
+    I -->|Yes| J[decommissionEquipment]
+    I -->|No| K[Return to Service]
 ```
 
 ## Actor Relationships

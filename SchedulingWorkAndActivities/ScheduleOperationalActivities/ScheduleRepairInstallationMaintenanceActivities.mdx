@@ -82,6 +82,34 @@ Scheduling repair, installation, and maintenance activities involves coordinatin
 | findMaterialAvailability | Check parts inventory for upcoming scheduled jobs |
 | getServiceHistory | Retrieve past service records for a customer or site |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ServiceOrder ||--|{ ScheduleSlot : "assigned to"
+    ServiceOrder ||--o{ MaterialKit : requires
+    ServiceOrder ||--|| ServiceReport : "documented by"
+    ServiceOrder }o--|| JobSite : "performed at"
+    TechnicianRoster ||--o{ ScheduleSlot : "fills"
+    MaterialKit }o--|| JobSite : "delivered to"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Created
+    Created --> Scheduled : jobScheduled
+    Scheduled --> MaterialsReady : materialKitPrepared
+    MaterialsReady --> Confirmed : appointmentConfirmed
+    Confirmed --> Dispatched : technicianDispatched
+    Dispatched --> Completed : serviceOrderCompleted
+    Scheduled --> Rescheduled : jobRescheduled
+    Rescheduled --> Scheduled : jobScheduled
+    Confirmed --> Rescheduled : jobRescheduled
+    Completed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -93,7 +121,9 @@ graph TD
     E -->|Yes| F[dispatchTechnician]
     E -->|No| G[rescheduleJob]
     G --> D
-    F --> H[completeServiceOrder]
+    F --> H{Job Successful?}
+    H -->|Yes| I[completeServiceOrder]
+    H -->|No| G
 ```
 
 ## Actor Relationships

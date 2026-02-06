@@ -81,6 +81,37 @@ Servicing vehicles to maintain functionality encompasses routine preventive main
 | findOpenAppointments | Locate available service bay slots for scheduling |
 | getFleetComplianceStatus | Check maintenance compliance rates across a vehicle fleet |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Vehicle ||--o{ ServiceAppointment : "scheduled for"
+    Vehicle ||--o{ ServiceRecord : "tracked in"
+    Vehicle ||--|| ServiceInterval : "follows"
+    ServiceAppointment ||--|| MaintenanceChecklist : "uses"
+    Vehicle ||--o{ FluidLevel : "measured by"
+    ServiceRecord ||--o{ FluidLevel : "documents"
+    MaintenanceChecklist ||--o{ ServiceRecord : "produces"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> DueForService
+    DueForService --> Scheduled : serviceScheduled
+    Scheduled --> Inspecting : multiPointInspectionCompleted
+    Inspecting --> FluidService : fluidsAndFiltersChanged
+    FluidService --> BrakeAndTireCheck : brakesAndTiresInspected
+    BrakeAndTireCheck --> Adjusting : minorAdjustmentsPerformed
+    BrakeAndTireCheck --> Documenting : no adjustments needed
+    Adjusting --> Documenting : serviceCompletionRecorded
+    Documenting --> OwnerNotified : ownerNotified
+    OwnerNotified --> InService
+    InService --> DueForService : interval reached
+    InService --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,7 +123,10 @@ graph TD
     E -->|Yes| F[performMinorAdjustments]
     E -->|No| G[recordServiceCompletion]
     F --> G
-    G --> H[notifyOwner]
+    G --> H{Additional Issues Found?}
+    H -->|Yes| I[Schedule Follow-Up]
+    H -->|No| J[notifyOwner]
+    I --> J
 ```
 
 ## Actor Relationships

@@ -82,6 +82,33 @@ Distributing promotional literature and samples involves planning distribution s
 | getPickups | Search customer pickup records by location, date, or item |
 | getRedemptions | Query coupon or offer usage by campaign, product, or period |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    DistributionCampaign ||--|{ MaterialInventory : "uses"
+    DistributionCampaign ||--|{ SampleInventory : "allocates"
+    DistributionCampaign ||--o{ DeliveryRun : "executed via"
+    DeliveryRun ||--o{ PickupRecord : generates
+    PickupRecord ||--o| RedemptionRecord : "leads to"
+    DistributionCampaign ||--|| DistributionReport : "summarized in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Planned
+    Planned --> MaterialsOrdered : materialsOrdered
+    MaterialsOrdered --> LocationsStocked : locationsStocked
+    LocationsStocked --> Delivering : deliveryExecuted
+    Delivering --> TrackingPickups : pickupsTracked
+    TrackingPickups --> MeasuringRedemption : redemptionMeasured
+    TrackingPickups --> LocationsStocked : locationsStocked
+    MeasuringRedemption --> Reported : resultsReported
+    Reported --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,8 +117,12 @@ graph TD
     B --> C[stockLocations]
     C --> D[executeDelivery]
     D --> E[trackPickups]
-    E --> F[measureRedemption]
-    F --> G[reportResults]
+    E --> F{Inventory Low?}
+    F -->|Yes| C
+    F -->|No| G[measureRedemption]
+    G --> H{Campaign Active?}
+    H -->|Yes| D
+    H -->|No| I[reportResults]
 ```
 
 ## Actor Relationships

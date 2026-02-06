@@ -81,6 +81,38 @@ Patient health monitoring involves systematic observation of vital signs, sympto
 | getAbnormalResults | List all out-of-range readings or lab results for a patient or unit |
 | findPendingAssessments | Locate patients due for their next scheduled observation |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    PatientRecord ||--|{ VitalSignReading : "contains"
+    PatientRecord ||--|| MonitoringProtocol : "governed by"
+    PatientRecord ||--o{ AssessmentNote : "includes"
+    VitalSignReading ||--o{ ClinicalAlert : "may trigger"
+    MonitoringProtocol ||--|{ ClinicalAlert : "defines thresholds for"
+    ClinicalAlert }o--|| AssessmentNote : "investigated in"
+    LabResult }o--|| PatientRecord : "filed in"
+    LabResult ||--o{ ClinicalAlert : "may trigger"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Monitoring
+    Monitoring --> VitalsLogged : vitalsRecorded
+    VitalsLogged --> Normal : withinThresholds
+    VitalsLogged --> Abnormal : abnormalReadingDetected
+    Normal --> Monitoring : vitalsRecorded
+    Abnormal --> AlertActive : alertTriggered
+    AlertActive --> Assessed : patientStatusAssessed
+    Assessed --> Escalated : concernEscalated
+    Assessed --> ProtocolUpdated : protocolUpdated
+    Escalated --> TestOrdered : diagnosticTestOrdered
+    TestOrdered --> Monitoring : vitalsRecorded
+    ProtocolUpdated --> Monitoring : vitalsRecorded
+```
+
 ## Workflow
 
 ```mermaid
@@ -94,6 +126,7 @@ graph TD
     F --> H[orderDiagnosticTest]
     H --> C
     G --> C
+    C --> A
 ```
 
 ## Actor Relationships

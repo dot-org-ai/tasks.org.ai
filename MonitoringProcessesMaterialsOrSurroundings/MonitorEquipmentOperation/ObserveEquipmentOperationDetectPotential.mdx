@@ -82,6 +82,36 @@ Observing equipment in operation to detect potential problems involves systemati
 | getEquipmentHistory | Find historical observations and conditions for a specific asset |
 | getWorkOrders | List maintenance work orders generated from observations |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Equipment ||--|{ Observation : "subject of"
+    Equipment ||--|{ EquipmentLog : "tracked in"
+    Observation ||--o{ Anomaly : "may detect"
+    Anomaly ||--o| WorkOrder : "generates"
+    Anomaly }o--|| FaultIndicator : "matches"
+    EquipmentLog ||--o{ Observation : "contains"
+    FaultIndicator }o--|| Equipment : "associated with"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> BaselineSet
+    BaselineSet --> Observing : observationConducted
+    Observing --> Normal : noAnomalyFound
+    Normal --> Observing : observationConducted
+    Observing --> AnomalyFound : anomalyLogged
+    AnomalyFound --> SeverityReviewed : severityAssessed
+    SeverityReviewed --> Escalated : anomalyEscalated
+    SeverityReviewed --> WorkOrderPending : workOrderCreated
+    Escalated --> WorkOrderPending : workOrderCreated
+    WorkOrderPending --> Closed : observationClosed
+    Closed --> Observing : observationConducted
+```
+
 ## Workflow
 
 ```mermaid
@@ -97,6 +127,7 @@ graph TD
     G -->|No| I
     I --> J[Schedule Maintenance]
     D --> B
+    J --> B
 ```
 
 ## Actor Relationships

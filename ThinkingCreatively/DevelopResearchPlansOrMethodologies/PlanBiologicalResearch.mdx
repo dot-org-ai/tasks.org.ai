@@ -81,6 +81,34 @@ Planning biological research involves formulating hypotheses, designing experime
 | getBiosafetyClearances | Find biosafety clearances by status or committee |
 | findModelOrganisms | Search available model organisms by species or application |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    StudyPlan ||--|| Hypothesis : tests
+    StudyPlan ||--|| ExperimentalProtocol : follows
+    StudyPlan ||--|| ModelOrganism : uses
+    StudyPlan ||--|| SamplePlan : defines
+    StudyPlan ||--o| BiosafetyClearance : approvedBy
+    ExperimentalProtocol }o--|| ModelOrganism : targets
+    SamplePlan }o--|| ExperimentalProtocol : implementedBy
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> HypothesisReady
+    HypothesisReady --> ExperimentDesigned : hypothesisFormulated
+    ExperimentDesigned --> OrganismSelected : experimentDesigned
+    OrganismSelected --> ProtocolReady : modelOrganismSelected
+    ProtocolReady --> BiosafetyReview : protocolDeveloped
+    BiosafetyReview --> ProtocolReady : revisions needed
+    BiosafetyReview --> SamplePlanning : biosafetyClearanceGranted
+    SamplePlanning --> Finalized : studyPlanFinalized
+    Finalized --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -93,7 +121,10 @@ graph TD
     F -->|Yes| G[planSampleCollection]
     F -->|No| H[Revise Protocol]
     H --> D
-    G --> I[finalizeStudyPlan]
+    G --> I{Sample Plan Feasible?}
+    I -->|No| J[Adjust Experiment]
+    J --> B
+    I -->|Yes| K[finalizeStudyPlan]
 ```
 
 ## Actor Relationships

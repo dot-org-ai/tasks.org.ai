@@ -83,19 +83,53 @@ Maintaining construction tools and equipment involves servicing power tools, hea
 | findQuarantinedTools | Locate assets currently removed from service awaiting repair |
 | getUsageReport | Retrieve operation hours or cycle counts for assets at a job site |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ConstructionAsset ||--|| MaintenanceLog : "tracked in"
+    ConstructionAsset ||--o{ SafetyInspectionReport : "inspected by"
+    ConstructionAsset ||--o{ WorkOrder : "serviced via"
+    ConstructionAsset ||--o{ UsageRecord : "measured by"
+    ConstructionAsset }o--|| ToolInventory : "stored in"
+    WorkOrder ||--o{ MaintenanceLog : "recorded in"
+    SafetyInspectionReport ||--o{ WorkOrder : "generates"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Available
+    Available --> Inspecting : toolInspected
+    Inspecting --> InService : passes inspection
+    Inspecting --> Repairing : repairPerformed
+    Inspecting --> Quarantined : defectiveToolQuarantined
+    Repairing --> Documented : maintenanceLogUpdated
+    Documented --> InService : returned to service
+    Quarantined --> ReplacementPending : rentalReplacementRequested
+    ReplacementPending --> Available : replacement delivered
+    InService --> Scheduled : preventiveMaintenanceScheduled
+    Scheduled --> Inspecting : maintenance due
+    InService --> Calibrating : equipmentCalibrated
+    Calibrating --> InService : calibration complete
+    InService → [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[inspectTool] --> B{Passes Inspection?}
-    B -->|Yes| C[Return to Service]
-    B -->|No| D{Repairable On-Site?}
-    D -->|Yes| E[performRepair]
-    D -->|No| F[quarantineDefectiveTool]
-    F --> G[requestRentalReplacement]
-    E --> H[updateMaintenanceLog]
-    H --> I[schedulePreventiveMaintenance]
-    G --> I
+    B -->|Yes| C[calibrateEquipment]
+    C --> D[Return to Service]
+    B -->|No| E{Repairable On-Site?}
+    E -->|Yes| F[performRepair]
+    E -->|No| G[quarantineDefectiveTool]
+    G --> H[requestRentalReplacement]
+    F --> I[updateMaintenanceLog]
+    I --> J[schedulePreventiveMaintenance]
+    H --> J
 ```
 
 ## Actor Relationships

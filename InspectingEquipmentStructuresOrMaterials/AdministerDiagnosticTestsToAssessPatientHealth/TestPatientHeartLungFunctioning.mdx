@@ -87,6 +87,36 @@ Testing patient heart or lung functioning involves performing a range of cardiop
 | getPatientHistory | Look up prior cardiopulmonary test results for a specific patient |
 | getProtocols | Retrieve standardized test protocols by procedure type |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TestOrder ||--|{ DiagnosticResult : "produces"
+    TestOrder ||--|| ConsentForm : "requires"
+    TestOrder ||--|| TestProtocol : "follows"
+    DiagnosticResult ||--|{ Interpretation : "analyzed in"
+    DiagnosticResult ||--o{ QualityMetric : "validated by"
+    DiagnosticResult ||--o{ BillingCode : "billed as"
+    PatientRecord ||--o{ TestOrder : "contains"
+    PatientRecord ||--o{ DiagnosticResult : "stores"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Ordered
+    Ordered --> Prepared : patientPrepared
+    Prepared --> Administered : testAdministered
+    Administered --> ResultsCaptured : resultsCaptured
+    ResultsCaptured --> Interpreted : resultsInterpreted
+    Interpreted --> Abnormal : abnormalityDetected
+    Interpreted --> Documented : findingsDocumented
+    Abnormal --> Documented : findingsDocumented
+    Documented --> Billed : billingSubmitted
+    Billed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -99,7 +129,9 @@ graph TD
     F -->|Yes| G[flagAbnormality]
     F -->|No| H[documentFindings]
     G --> H
-    H --> I[submitForBilling]
+    H --> I{Repeat Test Needed?}
+    I -->|Yes| B
+    I -->|No| J[submitForBilling]
 ```
 
 ## Actor Relationships

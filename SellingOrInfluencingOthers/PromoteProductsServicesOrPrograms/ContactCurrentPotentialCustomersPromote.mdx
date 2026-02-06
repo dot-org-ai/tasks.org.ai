@@ -82,6 +82,34 @@ Contacting customers for promotion involves segmenting target audiences, selecti
 | getResponses | Search customer reactions by sentiment, interest level, or date |
 | getPerformance | Query campaign metrics by channel, conversion rate, or period |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    OutreachCampaign ||--|{ ContactList : targets
+    ContactList ||--|{ ProspectProfile : contains
+    OutreachCampaign ||--o{ ContactAttempt : generates
+    ContactAttempt ||--o| ResponseRecord : "results in"
+    ResponseRecord ||--o| FollowUpTask : triggers
+    OutreachCampaign ||--|| CampaignReport : "summarized in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ListBuilt
+    ListBuilt --> CampaignActive : campaignLaunched
+    CampaignActive --> ContactMade : contactInitiated
+    ContactMade --> MessageSent : messageDelivered
+    MessageSent --> ResponseLogged : responseRecorded
+    ResponseLogged --> FollowUpPlanned : followUpScheduled
+    FollowUpPlanned --> ContactMade : contactInitiated
+    ResponseLogged --> CampaignActive : contactInitiated
+    CampaignActive --> Reported : performanceReported
+    Reported --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,9 +120,10 @@ graph TD
     D --> E[recordResponse]
     E --> F{Interested?}
     F -->|Yes| G[scheduleFollowUp]
-    F -->|No| H[Continue]
+    F -->|No| H{More Contacts?}
     G --> C
-    H --> I[reportPerformance]
+    H -->|Yes| C
+    H -->|No| I[reportPerformance]
 ```
 
 ## Actor Relationships

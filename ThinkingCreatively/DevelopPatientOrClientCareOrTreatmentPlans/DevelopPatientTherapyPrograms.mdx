@@ -81,6 +81,34 @@ Developing patient therapy programs involves creating multi-disciplinary rehabil
 | getProgressTimeline | Retrieve functional outcome data across all reporting periods |
 | findProgramsByOutcome | List programs filtered by discharge outcome category |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TherapyProgram ||--|{ TherapySession : contains
+    TherapyProgram ||--|{ FunctionalGoal : targets
+    TherapyProgram ||--|{ ProgressReport : generates
+    TherapyProgram ||--o| HomeExerciseProgram : supplements
+    TherapyProgram ||--|| DischargeOutcome : concludes
+    FunctionalGoal }o--|| ProgressReport : trackedIn
+    TherapySession }o--|| FunctionalGoal : advances
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> FunctionalEvaluation
+    FunctionalEvaluation --> ProgramDesign : functionEvaluated
+    ProgramDesign --> Staffed : programDesigned
+    Staffed --> Scheduled : therapistsAssigned
+    Scheduled --> InProgress : therapyScheduled
+    InProgress --> ProgressReview : homeExercisesPrescribed
+    ProgressReview --> ProgramDesign : adjust program
+    ProgressReview --> Discharge : progressReported
+    Discharge --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -91,8 +119,9 @@ graph TD
     D --> E[prescribeHomeExercises]
     E --> F[reportProgress]
     F --> G{Goals Met?}
-    G -->|No| H[Adjust Program]
-    H --> D
+    G -->|No| H{Major Redesign?}
+    H -->|Yes| B
+    H -->|No| D
     G -->|Yes| I[dischargePatient]
 ```
 

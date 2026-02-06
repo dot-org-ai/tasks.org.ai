@@ -79,6 +79,35 @@ Analyzing information obtained from news sources involves evaluating raw materia
 | getStoryLeads | List story leads filtered by priority, status, or date range |
 | getFactCheckReports | Retrieve verification reports by claim, source, or outcome |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    NewsSource ||--|{ StoryLead : generates
+    NewsSource ||--|| SourceCredibilityScore : ratedBy
+    StoryLead ||--|{ FactCheckReport : verifiedBy
+    StoryLead ||--|| AnalysisBrief : synthesizedIn
+    FactCheckReport }o--|| SourceCredibilityScore : updates
+    AnalysisBrief }o--|| FactCheckReport : incorporates
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Ingested
+    Ingested --> CredibilityCheck : sourceIngested
+    CredibilityCheck --> CrossReferencing : credibilityAssessed
+    CredibilityCheck --> Flagged : discrepancyFlagged
+    CrossReferencing --> Verification : facts cross-referenced
+    Flagged --> Verification : still needs verification
+    Verification --> Synthesized : factVerified
+    Synthesized --> Prioritized : analysisSynthesized
+    Prioritized --> Approved : analysisBriefApproved
+    Prioritized --> Ingested : more sources needed
+    Approved --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -88,9 +117,11 @@ graph TD
     C -->|Yes| D[crossReference]
     C -->|No| E[flagDiscrepancy]
     D --> F[verifyFacts]
-    F --> G[synthesizeFindings]
     E --> F
-    G --> H[prioritizeStory]
+    F --> G{Facts Confirmed?}
+    G -->|No| A
+    G -->|Yes| H[synthesizeFindings]
+    H --> I[prioritizeStory]
 ```
 
 ## Actor Relationships

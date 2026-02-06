@@ -81,6 +81,36 @@ Extraction and excavation equipment maintenance covers the upkeep of heavy machi
 | getUndercarriageWearReport | Find wear measurements for tracked equipment |
 | findOpenWorkOrders | List incomplete maintenance work orders by site or priority |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    HeavyEquipment ||--|{ UndercarriageComponent : "contains"
+    HeavyEquipment ||--|| ServiceInterval : "follows"
+    HeavyEquipment ||--o{ FluidSample : "sampled from"
+    HeavyEquipment ||--o{ WorkOrder : "serviced via"
+    HeavyEquipment ||--o{ HourMeterReading : "tracked by"
+    FluidSample ||--o{ WorkOrder : "triggers"
+    ServiceInterval ||--o{ WorkOrder : "generates"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> InOperation
+    InOperation --> HoursLogged : hourMeterReadingLogged
+    HoursLogged --> ServiceScheduled : preventiveServiceScheduled
+    HoursLogged --> InOperation : not yet due
+    ServiceScheduled --> UndercarriageCheck : undercarriageInspected
+    UndercarriageCheck --> FluidAnalysis : fluidSampleSubmitted
+    FluidAnalysis --> HydraulicWork : hydraulicServicePerformed
+    FluidAnalysis --> WearReplacement : groundEngagementReplaced
+    HydraulicWork --> WearReplacement : groundEngagementReplaced
+    WearReplacement --> Certified : equipmentCertifiedForOperation
+    Certified --> InOperation : returned to field
+```
+
 ## Workflow
 
 ```mermaid
@@ -92,10 +122,12 @@ graph TD
     E --> F[submitFluidSample]
     F --> G{Abnormal Results?}
     G -->|Yes| H[performHydraulicService]
-    G -->|No| I[replaceGroundEngagement]
+    G -->|No| I{Wear Parts Due?}
     H --> I
-    I --> J[certifyForOperation]
-    J --> D
+    I -->|Yes| J[replaceGroundEngagement]
+    I -->|No| K[certifyForOperation]
+    J --> K
+    K --> D
 ```
 
 ## Actor Relationships

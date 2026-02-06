@@ -81,6 +81,34 @@ Creating physical models or prototypes involves translating designs into tangibl
 | getMaterialBills | Find material lists by prototype or project |
 | getDesignFeedback | Search feedback records by prototype or reviewer |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Prototype ||--|| BuildSpecification : builtFrom
+    Prototype ||--|| MaterialBill : requires
+    Prototype ||--|| TestPlan : testedBy
+    Prototype ||--|{ TestResult : produces
+    Prototype ||--|{ DesignFeedback : receives
+    BuildSpecification }o--|| MaterialBill : references
+    TestResult }o--|| TestPlan : satisfies
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ConceptSelected
+    ConceptSelected --> SpecPrepared : buildSpecPrepared
+    SpecPrepared --> MaterialsReady : materialsProcured
+    MaterialsReady --> Fabricated : prototypeFabricated
+    Fabricated --> Tested : physicalTestConducted
+    Tested --> FeedbackGathered : feedbackCollected
+    FeedbackGathered --> SpecPrepared : designIterated
+    FeedbackGathered --> Approved : accepted
+    Approved --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,11 +117,13 @@ graph TD
     B --> C[procureMaterials]
     C --> D[fabricatePrototype]
     D --> E[conductPhysicalTest]
-    E --> F[collectFeedback]
-    F --> G{Acceptable?}
-    G -->|Yes| H[Approve Prototype]
-    G -->|No| I[iterateDesign]
-    I --> B
+    E --> F{Test Passed?}
+    F -->|No| G[iterateDesign]
+    G --> B
+    F -->|Yes| H[collectFeedback]
+    H --> I{Acceptable?}
+    I -->|No| G
+    I -->|Yes| J[Approve Prototype]
 ```
 
 ## Actor Relationships

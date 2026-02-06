@@ -70,7 +70,7 @@ Compiling environmental or climatological data involves gathering observations f
 | qualityChecksApplied | Validation rules have been run against ingested observations |
 | suspectDataFlagged | Observations failing quality thresholds have been marked |
 | dataAggregated | Temporal summaries have been computed from raw data |
-| streamsmerged | Multiple data sources have been combined into one dataset |
+| streamsMerged | Multiple data sources have been combined into one dataset |
 | datasetPublished | A compiled environmental dataset has been released |
 | metadataUpdated | Data source catalog and documentation have been refreshed |
 
@@ -83,6 +83,36 @@ Compiling environmental or climatological data involves gathering observations f
 | getAggregatedData | Access computed summaries by location, parameter, and period |
 | findDatasets | List published datasets by topic, region, or publication date |
 | getStationStatus | Check operational status and last report time for monitoring stations |
+
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MonitoringStation ||--|{ DataStream : produces
+    DataStream ||--|{ Observation : contains
+    Observation ||--o{ QualityFlag : "may have"
+    Observation }|--|| AggregatedRecord : "rolled into"
+    AggregatedRecord }|--|| ClimatologyDataset : "published in"
+    ClimatologyDataset ||--|| MetadataCatalog : "described by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Ingesting
+    Ingesting --> QualityChecking : observationsIngested
+    QualityChecking --> Flagged : suspectDataFlagged
+    QualityChecking --> Validated : qualityChecksApplied
+    Flagged --> QualityChecking : dataReviewed
+    Validated --> Aggregating : aggregateTemporally
+    Aggregating --> Aggregated : dataAggregated
+    Aggregated --> Merging : mergeDataStreams
+    Merging --> Merged : streamsMerged
+    Merged --> Published : datasetPublished
+    Published --> [*]
+    Published --> Ingesting : nextCycle
+```
 
 ## Workflow
 

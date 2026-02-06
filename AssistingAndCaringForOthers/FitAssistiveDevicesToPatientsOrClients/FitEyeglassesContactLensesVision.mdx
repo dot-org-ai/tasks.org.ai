@@ -81,18 +81,50 @@ Fitting eyeglasses, contact lenses, or other vision aids involves interpreting o
 | findPendingPickups | Locate completed orders awaiting patient pickup |
 | getContactLensTrials | Retrieve contact lens trial history for a patient |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Prescription ||--|{ LensOrder : specifies
+    Prescription ||--o| ContactLensTrial : "may initiate"
+    FrameSelection ||--|| LensOrder : "paired with"
+    LensOrder ||--|| FittingRecord : "fitted via"
+    FittingRecord ||--o{ FittingRecord : "adjusted in"
+    Prescription ||--o| VisionAidDevice : "may require"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> PrescriptionReviewed
+    PrescriptionReviewed --> FrameChosen : frameSelected
+    FrameChosen --> Measured : measurementsTaken
+    Measured --> OrderPlaced : lensesOrdered
+    OrderPlaced --> Fabrication : inProduction
+    Fabrication --> FittingReady : lensesReceived
+    FittingReady --> Fitted : fittingPerformed
+    Fitted --> Adjusted : eyewearAdjusted
+    Adjusted --> Fitted : refitting
+    Fitted --> Dispensed : patientSatisfied
+    Dispensed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
-    A[interpretPrescription] --> B[selectFrame]
-    B --> C[takeMeasurements]
-    C --> D[orderLenses]
-    D --> E[performFitting]
-    E --> F{Comfortable?}
-    F -->|Yes| G[Complete]
-    F -->|No| H[adjustEyewear]
-    H --> E
+    A[interpretPrescription] --> B{Eyeglasses or Contacts?}
+    B -->|Eyeglasses| C[selectFrame]
+    B -->|Contacts| I[fitContactLenses]
+    C --> D[takeMeasurements]
+    D --> E[orderLenses]
+    E --> F[performFitting]
+    F --> G{Comfortable?}
+    G -->|Yes| H[Complete]
+    G -->|No| J[adjustEyewear]
+    J --> F
+    I --> H
 ```
 
 ## Actor Relationships

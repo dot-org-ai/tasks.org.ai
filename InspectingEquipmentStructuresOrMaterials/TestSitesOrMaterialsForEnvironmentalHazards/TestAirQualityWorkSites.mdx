@@ -82,6 +82,37 @@ Workplace air quality testing measures concentrations of dust, fumes, vapors, an
 | getExposures | Fetch worker exposure assessments |
 | getReports | Access air quality documentation |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    WorkSite ||--o{ AirSample : "sampled at"
+    AirSample ||--|{ Contaminant : contains
+    Contaminant }o--|| ExposureLimit : "regulated by"
+    AirSample ||--|{ Measurement : produces
+    Measurement }o--|| AssessmentReport : "included in"
+    WorkSite ||--o{ AssessmentReport : documents
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Sampling : sampleCollected
+    Sampling --> Analysis : contaminantMeasured
+    Analysis --> ExposureReview : exposureAssessed
+    ExposureReview --> Compliant : withinLimits
+    ExposureReview --> Exceedance : aboveLimits
+    Exceedance --> SourceInvestigation : sourceIdentified
+    SourceInvestigation --> ControlDesign : controlRecommended
+    ControlDesign --> ControlImplementation : implementControls
+    ControlImplementation --> Sampling : resampleRequired
+    Compliant --> Reported : reportGenerated
+    Reported --> Verified : complianceVerified
+    Verified --> [*]
+    Verified --> Sampling : periodicMonitoring
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,12 +121,14 @@ graph TD
     B --> C[assessExposure]
     C --> D{Exceeds Limit?}
     D -->|Yes| E[identifySource]
-    D -->|No| F[Continue Monitoring]
+    D -->|No| F[generateReport]
     E --> G[recommendControl]
     G --> H[Implement Controls]
     H --> A
-    F --> I[generateReport]
-    I --> J[verifyCompliance]
+    F --> I[verifyCompliance]
+    I --> J{Periodic Review Due?}
+    J -->|Yes| A
+    J -->|No| K[Archive Report]
 ```
 
 ## Actor Relationships

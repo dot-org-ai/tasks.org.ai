@@ -80,6 +80,33 @@ Estimating labor requirements involves analyzing the scope and complexity of pla
 | getProductivityBenchmarks | Retrieve output-per-hour benchmarks by activity type |
 | getLaborMarketData | Query wage rates and worker availability by region and skill |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    WorkloadForecast ||--|{ LaborRequirement : "drives"
+    LaborRequirement ||--o{ SkillProfile : "requires"
+    LaborRequirement ||--|| LaborCostModel : "costed-by"
+    StaffingPlan ||--|{ LaborRequirement : "fulfills"
+    StaffingPlan }o--|| ProductivityBenchmark : "benchmarked-against"
+    LaborCostModel }o--|| ProductivityBenchmark : "calibrated-by"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> WorkloadAnalysis
+    WorkloadAnalysis --> StaffingCalculation : workloadAnalyzed
+    StaffingCalculation --> SkillMatching : staffingNeedsCalculated
+    SkillMatching --> CostProjection : skillProfilesMatched
+    CostProjection --> BudgetValidation : laborCostsProjected
+    BudgetValidation --> StaffingCalculation : overBudget
+    BudgetValidation --> PlanAssembly : budgetValidated
+    PlanAssembly --> Approved : staffingPlanBuilt
+    Approved --> [*] : staffingPlanApproved
+```
+
 ## Workflow
 
 ```mermaid
@@ -89,9 +116,10 @@ graph TD
     C --> D[projectLaborCosts]
     D --> E[validateAgainstBudget]
     E --> F{Within Budget?}
-    F -->|No| G[Adjust Scope or Mix]
-    G --> B
-    F -->|Yes| H[buildStaffingPlan]
+    F -->|No| G{Reduce Scope?}
+    G -->|Yes| B
+    G -->|Request Exception| H[buildStaffingPlan]
+    F -->|Yes| H
     H --> I[approveStaffingPlan]
 ```
 

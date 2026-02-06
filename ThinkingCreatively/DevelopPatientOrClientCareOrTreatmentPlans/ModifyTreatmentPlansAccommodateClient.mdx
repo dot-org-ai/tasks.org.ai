@@ -80,18 +80,51 @@ Modifying treatment plans to accommodate client needs involves reviewing existin
 | getPendingAuthorizations | List plan changes awaiting insurance or supervisory approval |
 | getPatientBarriers | Identify documented barriers for a specific patient |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TreatmentPlan ||--|{ Modification : undergoes
+    TreatmentPlan ||--|{ ProgressNote : documented_in
+    Modification ||--|| ClinicalAssessment : justifiedBy
+    Modification ||--o| AuthorizationRequest : may_require
+    PatientFeedback }o--|| Modification : drives
+    ClinicalAssessment }o--|| PatientFeedback : incorporates
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> PlanReview
+    PlanReview --> BarrierAnalysis : planReviewed
+    BarrierAnalysis --> ModificationDraft : barrierIdentified
+    ModificationDraft --> ConsentProcess : modificationProposed
+    ConsentProcess --> AuthorizationPending : authorization needed
+    ConsentProcess --> Updated : consentObtained
+    AuthorizationPending --> Updated : authorizationApproved
+    AuthorizationPending --> ModificationDraft : authorization denied
+    Updated --> Documented : planUpdated
+    Documented --> PlanReview : ongoing monitoring
+    Documented --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[reviewCurrentPlan] --> B[identifyBarriers]
-    B --> C[proposeModification]
-    C --> D[obtainConsent]
-    D --> E{Authorization Required?}
-    E -->|Yes| F[requestAuthorization]
-    E -->|No| G[updatePlan]
-    F --> G[updatePlan]
-    G --> H[documentRationale]
+    B --> C{Barriers Found?}
+    C -->|No| D[Continue Current Plan]
+    C -->|Yes| E[proposeModification]
+    E --> F[obtainConsent]
+    F --> G{Authorization Required?}
+    G -->|Yes| H[requestAuthorization]
+    H --> I{Approved?}
+    I -->|No| E
+    I -->|Yes| J[updatePlan]
+    G -->|No| J
+    J --> K[documentRationale]
 ```
 
 ## Actor Relationships

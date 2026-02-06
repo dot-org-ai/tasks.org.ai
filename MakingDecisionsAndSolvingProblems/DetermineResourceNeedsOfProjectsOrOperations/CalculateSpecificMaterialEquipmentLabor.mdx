@@ -80,6 +80,33 @@ Calculating specific material, equipment, and labor requirements for production 
 | getMachineAvailability | Check available machine hours by equipment type and time period |
 | getMaterialInventory | Query current raw material stock levels and incoming shipments |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    ProductionOrder ||--|{ BillOfMaterials : "references"
+    ProductionOrder ||--|{ RoutingSheet : "follows"
+    BillOfMaterials ||--o{ ScrapAllowance : "adjusted-by"
+    RoutingSheet ||--|| CapacityPlan : "mapped-to"
+    CapacityPlan ||--|{ LaborAllocation : "assigns"
+    ProductionOrder ||--|| CapacityPlan : "scheduled-in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> OrderReceived
+    OrderReceived --> MaterialsCalculated : productionOrderAnalyzed
+    MaterialsCalculated --> ScrapAdjusted : materialNeedsCalculated
+    ScrapAdjusted --> EquipmentPlanned : scrapAllowanceApplied
+    EquipmentPlanned --> LaborEstimated : equipmentHoursDetermined
+    LaborEstimated --> CapacityCheck : productionLaborEstimated
+    CapacityCheck --> ResourcePlanReady : capacityChecked
+    CapacityCheck --> MaterialsCalculated : capacityInsufficient
+    ResourcePlanReady --> [*] : resourcePlanGenerated
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,9 +117,10 @@ graph TD
     D --> E[estimateProductionLabor]
     E --> F[checkCapacity]
     F --> G{Capacity Available?}
-    G -->|No| H[Reschedule or Outsource]
-    H --> F
-    G -->|Yes| I[generateResourcePlan]
+    G -->|No| H{Reschedule or Outsource?}
+    H -->|Reschedule| B
+    H -->|Outsource| I[generateResourcePlan]
+    G -->|Yes| I
 ```
 
 ## Actor Relationships

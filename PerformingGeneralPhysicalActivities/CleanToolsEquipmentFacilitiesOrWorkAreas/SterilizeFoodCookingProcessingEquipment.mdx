@@ -83,12 +83,45 @@ Food equipment sterilization involves the systematic cleaning, sanitizing, and v
 | findFailedTests | Locate equipment with recent failed swab tests |
 | getChemicalUsage | Track sanitizer consumption and reorder needs |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Equipment ||--|{ SanitationOrder : "requires"
+    Equipment ||--|| SanitationProtocol : "follows"
+    SanitationOrder ||--|| ChemicalSolution : "uses"
+    SanitationOrder ||--o{ SwabTest : "verified by"
+    SanitationOrder ||--|| ComplianceLog : "recorded in"
+    Equipment ||--o{ MaintenanceAlert : "may generate"
+    SanitationProtocol ||--|{ ChemicalSolution : "specifies"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Scheduled
+    Scheduled --> Disassembled : equipmentDisassembled
+    Disassembled --> Sanitizing : sanitizerApplied
+    Sanitizing --> Testing : conductSwabTest
+    Testing --> Reassembling : swabTestPassed
+    Testing --> Sanitizing : swabTestFailed
+    Reassembling --> Certified : sanitationCertified
+    Disassembled --> MaintenanceRequired : equipmentIssueFlagged
+    MaintenanceRequired --> Disassembled : repairCompleted
+    Certified --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[scheduleSanitation] --> B[disassembleEquipment]
-    B --> C[applySanitizer]
+    B --> B1{Equipment OK?}
+    B1 -->|Yes| C[applySanitizer]
+    B1 -->|No| B2[flagEquipmentIssue]
+    B2 --> B3[Repair Equipment]
+    B3 --> C
     C --> D[conductSwabTest]
     D --> E{Test Passed?}
     E -->|Yes| F[reassembleEquipment]

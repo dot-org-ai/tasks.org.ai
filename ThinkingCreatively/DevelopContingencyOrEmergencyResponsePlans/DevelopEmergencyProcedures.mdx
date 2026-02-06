@@ -79,6 +79,36 @@ Developing emergency procedures involves creating step-by-step protocols that gu
 | getHazardAssessments | Retrieve hazard evaluations by facility, risk level, or date |
 | getTrainingRecords | Find training completion records by employee, procedure, or date range |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    HazardAssessment ||--|{ EmergencyProcedure : informs
+    EmergencyProcedure ||--|{ EvacuationRoute : defines
+    EmergencyProcedure ||--|{ EmergencyContact : references
+    EmergencyProcedure ||--|{ TrainingRecord : requires
+    EvacuationRoute }o--|| EmergencyContact : notifies
+    TrainingRecord }o--|| EmergencyProcedure : certifies
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> HazardsIdentified
+    HazardsIdentified --> Drafted : procedureDrafted
+    Drafted --> RoutesSet : evacuationRoutesDefined
+    RoutesSet --> UnderReview : procedureReviewed
+    UnderReview --> Drafted : revisions required
+    UnderReview --> Approved : procedureApproved
+    Approved --> TrainingComplete : trainingConducted
+    TrainingComplete --> DrillReady : drillScheduled
+    DrillReady --> Approved : drill reveals gaps
+    DrillReady --> Active : drill passed
+    Active --> HazardsIdentified : annual reassessment
+    Active --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -90,7 +120,12 @@ graph TD
     E -->|No| B
     E -->|Yes| F[approveProcedure]
     F --> G[conductTraining]
-    G --> H[scheduleDrill]
+    G --> H{Training Complete?}
+    H -->|No| G
+    H -->|Yes| I[scheduleDrill]
+    I --> J{Drill Passed?}
+    J -->|No| B
+    J -->|Yes| K[Procedure Active]
 ```
 
 ## Actor Relationships

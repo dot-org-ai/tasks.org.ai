@@ -81,6 +81,37 @@ Maintaining contingency plans for disaster recovery involves the continuous revi
 | getChangeLogs | List plan modifications by date, author, or change type |
 | getPendingReviews | Find plans due for scheduled review or overdue for update |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    DisasterRecoveryPlan ||--|{ RecoveryTest : validates
+    DisasterRecoveryPlan ||--|{ ChangeLog : tracks
+    DisasterRecoveryPlan ||--|| ContactRoster : maintains
+    DisasterRecoveryPlan ||--|{ BackupVerification : requires
+    DisasterRecoveryPlan ||--|{ ComplianceAudit : undergoes
+    RecoveryTest }o--|| ChangeLog : triggers
+    BackupVerification }o--|| RecoveryTest : supports
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Current
+    Current --> UnderReview : planReviewed
+    UnderReview --> Updating : proceduresUpdated
+    UnderReview --> Validating : no changes needed
+    Updating --> Validating : backupsValidated
+    Validating --> RosterRefresh : rosterUpdated
+    RosterRefresh --> TestScheduled : testScheduled
+    TestScheduled --> TestComplete : testExecuted
+    TestComplete --> Updating : test failed
+    TestComplete --> Certified : complianceCertified
+    Certified --> Current : next review cycle
+    Certified --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -95,6 +126,8 @@ graph TD
     G --> H{Test Passed?}
     H -->|No| C
     H -->|Yes| I[certifyCompliance]
+    I --> J{Next Review Due?}
+    J -->|Yes| A
 ```
 
 ## Actor Relationships

@@ -81,19 +81,51 @@ Repairing structural components involves assessing damage to load-bearing and no
 | getPostRepairInspections | Find inspection results by repair order or inspector |
 | findRepairOrders | Search repair authorizations by building, status, or date |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    DamageAssessment ||--|| StructuralComponent : "evaluates"
+    DamageAssessment ||--|| RepairSpecification : "informs"
+    RepairSpecification ||--|| RepairOrder : "authorizes"
+    RepairOrder ||--o{ MaterialCertification : "requires"
+    StructuralComponent ||--o{ RepairOrder : "subject of"
+    RepairOrder ||--|| PostRepairInspection : "verified by"
+    MaterialCertification ||--o{ PostRepairInspection : "referenced in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> DamageIdentified
+    DamageIdentified --> Assessed : damageAssessed
+    Assessed --> EngineeringReview : engineeringReviewRequested
+    EngineeringReview --> Specified : repairSpecificationCreated
+    Specified --> Procuring : structuralMaterialsProcured
+    Procuring --> Repairing : structuralRepairExecuted
+    Repairing --> Inspecting : postRepairInspectionCompleted
+    Inspecting --> Closed : repairOrderClosed
+    Inspecting --> Repairing : deficiency found
+    Closed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
-    A[assessDamage] --> B[requestEngineeringReview]
-    B --> C[createRepairSpecification]
-    C --> D[procureStructuralMaterials]
-    D --> E[executeStructuralRepair]
-    E --> F[conductPostRepairInspection]
-    F --> G{Passes Code?}
-    G -->|Yes| H[closeRepairOrder]
-    G -->|No| I[Remediate Deficiency]
-    I --> E
+    A[assessDamage] --> B{Severity Level?}
+    B -->|Critical| C[Emergency Shoring]
+    B -->|Moderate/Minor| D[requestEngineeringReview]
+    C --> D
+    D --> E[createRepairSpecification]
+    E --> F[procureStructuralMaterials]
+    F --> G[executeStructuralRepair]
+    G --> H[conductPostRepairInspection]
+    H --> I{Passes Code?}
+    I -->|Yes| J[closeRepairOrder]
+    I -->|No| K[Remediate Deficiency]
+    K --> G
 ```
 
 ## Actor Relationships

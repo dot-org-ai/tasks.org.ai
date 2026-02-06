@@ -82,6 +82,37 @@ Medical equipment video display monitoring involves real-time observation of ima
 | getCalibrations | Find calibration records by display or date |
 | getAlerts | Retrieve active or historical display alerts |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    MedicalDisplay ||--|{ SignalQuality : "measured by"
+    MedicalDisplay ||--o{ CalibrationRecord : "verified via"
+    MedicalDisplay ||--o{ DisplayAlert : "generates"
+    MedicalDisplay ||--o{ PatientSession : "used during"
+    PatientSession ||--o{ ComplianceReport : "documented in"
+    CalibrationRecord }o--|| ComplianceReport : "referenced in"
+    DisplayAlert }o--|| PatientSession : "may affect"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Inactive
+    Inactive --> Active : monitoringActivated
+    Active --> SignalChecked : signalVerified
+    SignalChecked --> ClarityChecked : clarityAssessed
+    ClarityChecked --> CalibrationValid : calibrationValidated
+    CalibrationValid --> Documented : sessionDocumented
+    Documented --> Active : nextCycle
+    SignalChecked --> ArtifactFound : artifactDetected
+    ClarityChecked --> ArtifactFound : artifactDetected
+    ArtifactFound --> StaffNotified : staffAlerted
+    StaffNotified --> Active : issueResolved
+    StaffNotified --> Inactive : displayTakenOffline
+```
+
 ## Workflow
 
 ```mermaid
@@ -96,7 +127,13 @@ graph TD
     G --> H{Artifact Found?}
     H -->|Yes| D
     H -->|No| I[validateCalibration]
-    I --> J[documentSession]
+    I --> J{Calibration Valid?}
+    J -->|Yes| K[documentSession]
+    J -->|No| D
+    D --> L{Resolved?}
+    L -->|Yes| B
+    L -->|No| M[Take Display Offline]
+    K --> B
 ```
 
 ## Actor Relationships

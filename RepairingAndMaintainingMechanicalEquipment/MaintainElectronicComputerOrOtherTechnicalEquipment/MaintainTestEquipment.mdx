@@ -81,6 +81,39 @@ Test equipment maintenance ensures that oscilloscopes, multimeters, spectrometer
 | getOverdueCalibrations | Find instruments past their calibration due date |
 | getCertificates | Query calibration certificates by instrument or date range |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TestInstrument ||--o{ CalibrationCertificate : "certified by"
+    TestInstrument ||--|| CalibrationSchedule : "follows"
+    TestInstrument ||--o{ MeasurementUncertainty : "quantified by"
+    TestInstrument ||--o{ RepairRecord : "serviced in"
+    TestInstrument }o--|| InstrumentPool : "belongs to"
+    CalibrationCertificate ||--|| MeasurementUncertainty : "documents"
+    RepairRecord ||--o{ CalibrationCertificate : "triggers recalibration"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Available
+    Available --> Scheduled : calibrationScheduled
+    Scheduled --> Calibrating : instrumentCalibrated
+    Calibrating --> Certified : certificateIssued
+    Calibrating --> UnderRepair : instrumentRepaired
+    Calibrating --> Quarantined : instrumentQuarantined
+    UnderRepair --> Calibrating : repair complete
+    Quarantined --> UnderRepair : repair authorized
+    Certified --> Available : returned to pool
+    Certified --> Audited : calibrationProgramAudited
+    Audited --> Available : no gaps
+    Audited --> Quarantined : gaps found
+    Available --> Retired : instrumentRetired
+    Retired --> [*]
+```
+
 ## Workflow
 
 ```mermaid

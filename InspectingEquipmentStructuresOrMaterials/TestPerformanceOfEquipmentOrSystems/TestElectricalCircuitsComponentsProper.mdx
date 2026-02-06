@@ -82,6 +82,37 @@ Electrical circuit and component testing verifies that wiring, circuit boards, a
 | getDefects | Fetch identified failures and characteristics |
 | getApprovals | Access component certification records |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Circuit ||--|{ Component : contains
+    Circuit ||--o{ TestResult : generates
+    Component ||--o{ TestResult : generates
+    TestResult }o--|| TestProcedure : follows
+    TestResult ||--o{ Measurement : includes
+    Component ||--o{ Defect : "may have"
+    Circuit ||--o{ Defect : "may have"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> ContinuityCheck : continuityTested
+    ContinuityCheck --> VoltageCheck : voltageMeasured
+    ContinuityCheck --> DefectFound : defectIdentified
+    VoltageCheck --> ResistanceCheck : resistanceChecked
+    ResistanceCheck --> CurrentCheck : currentValidated
+    CurrentCheck --> IsolationCheck : isolationTested
+    IsolationCheck --> Approved : componentApproved
+    IsolationCheck --> DefectFound : defectIdentified
+    DefectFound --> Rejected : criticalFailure
+    DefectFound --> ContinuityCheck : reworkCompleted
+    Approved --> [*]
+    Rejected --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -95,7 +126,10 @@ graph TD
     G --> H{All Pass?}
     H -->|Yes| I[approveComponent]
     H -->|No| D
-    D --> J[Reject]
+    D --> J{Reworkable?}
+    J -->|Yes| K[Rework]
+    K --> A
+    J -->|No| L[Reject]
 ```
 
 ## Actor Relationships

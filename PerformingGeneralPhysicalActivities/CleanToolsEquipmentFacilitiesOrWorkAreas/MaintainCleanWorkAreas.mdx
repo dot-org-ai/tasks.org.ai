@@ -79,6 +79,37 @@ Maintaining clean work areas involves continuous upkeep of workstations, product
 | getAuditHistory | Pull compliance audit results over a date range |
 | getRotationSchedule | View current cleaning rotation assignments |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    WorkArea ||--|{ CleaningRotation : "has scheduled"
+    WorkArea ||--o{ SpotCleanRequest : "generates"
+    WorkArea ||--|{ HousekeepingLog : "tracks"
+    WorkArea }o--|| ComplianceStandard : "governed by"
+    WorkArea ||--o{ SupplyStation : "contains"
+    CleaningRotation ||--|{ HousekeepingLog : "produces"
+    SpotCleanRequest ||--o| HousekeepingLog : "recorded in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Clean
+    Clean --> MonitoringScheduled : rotationDefined
+    MonitoringScheduled --> CleaningInProgress : activityLogged
+    CleaningInProgress --> Clean : spotCleanCompleted
+    Clean --> AuditInProgress : auditCleanliness
+    AuditInProgress --> Clean : auditPassed
+    AuditInProgress --> NeedsAttention : auditFailed
+    NeedsAttention --> CleaningInProgress : spotCleanRequested
+    NeedsAttention --> HazardFlagged : hazardReported
+    HazardFlagged --> CleaningInProgress : spotCleanRequested
+    CleaningInProgress --> AuditInProgress : auditCleanliness
+    Clean --> [*]
+```
+
 ## Workflow
 
 ```mermaid

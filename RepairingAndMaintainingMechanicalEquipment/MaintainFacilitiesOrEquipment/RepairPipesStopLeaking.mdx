@@ -81,19 +81,52 @@ Repairing pipes to stop leaking involves identifying leak locations, isolating a
 | getPressureTests | Find pressure test results by pipe section or date |
 | findInspectionCertificates | Search inspection records by repair or building |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    LeakReport ||--|| RepairOrder : "initiates"
+    LeakReport ||--|| PipeSection : "identifies"
+    RepairOrder ||--o{ MaterialRequisition : "requires"
+    RepairOrder ||--|| PipeSection : "targets"
+    PipeSection ||--o{ PressureTest : "verified by"
+    RepairOrder ||--o{ InspectionCertificate : "certified by"
+    PressureTest ||--o{ InspectionCertificate : "supports"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> LeakDetected
+    LeakDetected --> Reported : leakReported
+    Reported --> Located : leakLocated
+    Located --> Isolated : sectionIsolated
+    Isolated --> Repairing : repairExecuted
+    Repairing --> Testing : pressureTestPassed
+    Repairing --> Repairing : test failed, re-repair
+    Testing --> Inspecting : inspectionRequested
+    Inspecting --> Closed : repairOrderClosed
+    Inspecting --> Repairing : inspection failed
+    Closed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
     A[reportLeak] --> B[locateLeak]
-    B --> C[isolateSection]
-    C --> D[executeRepair]
-    D --> E[conductPressureTest]
-    E --> F{Passed?}
-    F -->|Yes| G[requestInspection]
-    F -->|No| H[Re-repair Section]
-    H --> D
-    G --> I[closeRepairOrder]
+    B --> C{Accessible?}
+    C -->|Yes| D[isolateSection]
+    C -->|No| E[Excavation Required]
+    E --> D
+    D --> F[executeRepair]
+    F --> G[conductPressureTest]
+    G --> H{Passed?}
+    H -->|Yes| I[requestInspection]
+    H -->|No| J[Re-repair Section]
+    J --> F
+    I --> K[closeRepairOrder]
 ```
 
 ## Actor Relationships

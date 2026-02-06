@@ -82,6 +82,34 @@ Passenger boarding assistance encompasses ticket verification, seat assignment g
 | getBoardingStatus | Check the current boarding progress by group |
 | findMissingPassengers | Identify passengers not yet boarded from the manifest |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    BoardingManifest ||--|{ BoardingPass : contains
+    BoardingPass ||--|| SeatAssignment : "assigned to"
+    BoardingPass ||--|| BoardingGroup : "belongs to"
+    BoardingPass ||--o| MobilityRequest : "may have"
+    BoardingPass ||--o| LuggageTag : "linked to"
+    BoardingManifest ||--|| VehicleStatus : "depends on"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> GroupCalled
+    GroupCalled --> PassScanned : boardingPassScanned
+    PassScanned --> MobilityAssisted : mobilitySupportProvided
+    PassScanned --> Seated : seatAssigned
+    MobilityAssisted --> Seated : seatAssigned
+    Seated --> StowageComplete : stowageAssisted
+    StowageComplete --> GroupCalled : nextGroup
+    StowageComplete --> Reconciling : manifestReconciled
+    Reconciling --> GateClosed : boardingGateClosed
+    GateClosed --> [*]
+```
+
 ## Workflow
 
 ```mermaid
@@ -95,7 +123,10 @@ graph TD
     F --> G{All Groups Boarded?}
     G -->|No| A
     G -->|Yes| H[reconcileManifest]
-    H --> I[closeBoardingGate]
+    H --> I{Missing Passengers?}
+    I -->|Yes| J[Page Passengers]
+    I -->|No| K[closeBoardingGate]
+    J --> H
 ```
 
 ## Actor Relationships

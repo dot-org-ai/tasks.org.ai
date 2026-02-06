@@ -82,6 +82,38 @@ Monitoring production instruments involves continuously reading and interpreting
 | getAlarms | Find alarms by status, severity, or instrument |
 | getCalibrationSchedule | Retrieve upcoming calibration due dates for instruments |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    Instrument ||--|{ Reading : "produces"
+    Instrument ||--|{ Threshold : "configured with"
+    Instrument ||--o{ Alarm : "generates"
+    Instrument ||--o{ CalibrationRecord : "tracked by"
+    Reading }o--|| Threshold : "checked against"
+    Reading }o--|| ProductionRun : "belongs to"
+    Alarm }o--|| Threshold : "triggered by breach of"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Configuring
+    Configuring --> Monitoring : thresholdConfigured
+    Monitoring --> Reading : readingRecorded
+    Reading --> Monitoring : withinThreshold
+    Reading --> AlarmActive : alarmTriggered
+    AlarmActive --> Acknowledged : alarmAcknowledged
+    Acknowledged --> Adjusting : parameterAdjusted
+    Adjusting --> Reading : readingRecorded
+    Monitoring --> CalibrationDue : calibrationRequired
+    CalibrationDue --> Calibrating : calibrationStarted
+    Calibrating --> Monitoring : calibrationCompleted
+    Monitoring --> Logged : productionConditionsLogged
+    Logged --> Monitoring : continueMonitoring
+```
+
 ## Workflow
 
 ```mermaid

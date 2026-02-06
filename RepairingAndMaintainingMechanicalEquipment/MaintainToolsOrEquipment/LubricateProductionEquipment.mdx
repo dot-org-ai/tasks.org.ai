@@ -81,6 +81,37 @@ Production equipment lubrication involves identifying lubrication points, select
 | getOilAnalysisReports | Query oil analysis results by equipment or parameter |
 | findOverduePoints | List lubrication points past their scheduled service date |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    LubricationPoint ||--|| Lubricant : "requires"
+    LubricationPoint }o--|| LubricationRoute : "included in"
+    LubricationPoint ||--o{ LubricationLog : "recorded in"
+    LubricationRoute ||--o{ LubricationLog : "generates"
+    LubricationPoint ||--o{ OilSample : "sampled from"
+    OilSample ||--|| OilAnalysisReport : "analyzed in"
+    OilAnalysisReport ||--o{ LubricationLog : "referenced in"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> RouteCreated
+    RouteCreated --> RoundInProgress : lubricationRoundExecuted
+    RoundInProgress --> Recorded : lubricationActivityRecorded
+    Recorded --> Sampling : oilSampleCollected
+    Recorded --> Waiting : next round pending
+    Sampling --> Reviewed : oilAnalysisReviewed
+    Reviewed --> Adjusted : lubricationIntervalAdjusted
+    Reviewed --> Waiting : normal results
+    Adjusted --> Waiting : interval updated
+    Waiting --> RoundInProgress : next round due
+    Waiting --> Restocking : lubricantStockReplenished
+    Restocking --> Waiting : stock received
+```
+
 ## Workflow
 
 ```mermaid

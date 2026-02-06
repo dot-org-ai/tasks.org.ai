@@ -82,19 +82,52 @@ Climbing ladders or vehicles to perform duties includes ascending extension ladd
 | getIncidentHistory | Retrieve past safety incidents for a site or equipment type |
 | getTaskAssignments | List elevated work tasks assigned to a crew or worker |
 
+## Entity Relationships
+
+```mermaid
+erDiagram
+    TaskAssignment ||--|| WorkPermit : "authorized by"
+    TaskAssignment ||--o| Ladder : "requires"
+    TaskAssignment ||--o| Vehicle : "requires"
+    WorkPermit ||--|| SafetyChecklist : "depends on"
+    Ladder ||--o{ FallProtectionGear : "used with"
+    Vehicle ||--o{ FallProtectionGear : "used with"
+    TaskAssignment ||--o{ IncidentReport : "may generate"
+```
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Assessing
+    Assessing --> Inspecting : conditionsAssessed
+    Assessing --> Suspended : unsafeConditions
+    Suspended --> Assessing : conditionsImproved
+    Inspecting --> MethodSelected : equipmentInspected
+    Inspecting --> EquipmentFailed : defectFound
+    EquipmentFailed --> Inspecting : replacementProvided
+    MethodSelected --> Permitted : permitObtained
+    Permitted --> Positioned : equipmentPositioned
+    Positioned --> Executing : taskExecuted
+    Executing --> Descended : descentCompleted
+    Descended --> [*]
+```
+
 ## Workflow
 
 ```mermaid
 graph TD
-    A[assessConditions] --> B[inspectEquipment]
-    B --> C[selectAccessMethod]
-    C --> D[obtainPermit]
-    D --> E[positionEquipment]
-    E --> F[executeTask]
-    F --> G[descendSafely]
-    G --> H{Incident?}
-    H -->|Yes| I[File Incident Report]
-    H -->|No| J[Close Task]
+    A[assessConditions] --> B{Safe Conditions?}
+    B -->|No| A1[Suspend Work]
+    B -->|Yes| C[inspectEquipment]
+    C --> D[selectAccessMethod]
+    D --> E[obtainPermit]
+    E --> F[positionEquipment]
+    F --> G[executeTask]
+    G --> H[descendSafely]
+    H --> I{Incident?}
+    I -->|Yes| J[File Incident Report]
+    I -->|No| K[Close Task]
 ```
 
 ## Actor Relationships
