@@ -88,22 +88,27 @@ Managing clerical and administrative activities involves overseeing the document
 
 ```mermaid
 erDiagram
-    DocumentVendor ||--o{ RecordsArchive : includes
-    RecordsArchive }o--|| CourierService : "relates to"
-    RecordsArchive }o--|| SoftwareVendor : "relates to"
-    CourierService ||--o{ SoftwareVendor : includes
+    AdminTask ||--|| TaskQueue : "queued-in"
+    AdminTask ||--o{ DocumentRecord : "produces"
+    DocumentRecord ||--|| FilingSystem : "stored-in"
+    DocumentRecord ||--|| RetentionPolicy : "governed-by"
+    CorrespondenceLog ||--o{ AdminTask : "triggers"
+    WorkloadReport ||--o{ TaskQueue : "summarizes"
 ```
 
 ## State Diagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Initiated
-    Initiated --> DocumentVendor: DocumentVendor
-    DocumentVendor --> RecordsArchive: RecordsArchive
-    RecordsArchive --> CourierService: CourierService
-    CourierService --> SoftwareVendor: SoftwareVendor
-    SoftwareVendor --> [*]
+    [*] --> TaskAssigned
+    TaskAssigned --> DocumentProcessed : documentProcessed
+    DocumentProcessed --> CorrespondenceHandled : correspondenceHandled
+    CorrespondenceHandled --> Filed : filingSystemUpdated
+    Filed --> Completed : taskCompleted
+    Completed --> Rebalanced : workloadRebalanced
+    Rebalanced --> TaskAssigned : adminTaskAssigned
+    Filed --> RetentionApplied : retentionEnforced
+    RetentionApplied --> [*]
 ```
 
 ## Workflow

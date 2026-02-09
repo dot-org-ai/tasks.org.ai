@@ -88,26 +88,28 @@ Coordinating flight control and management activities involves directing air tra
 
 ```mermaid
 erDiagram
-    Airline ||--o{ FederalAviationAuthority : includes
-    FederalAviationAuthority ||--o{ MilitaryAirCommand : includes
-    MilitaryAirCommand ||--o{ WeatherService : includes
+    FlightPlan ||--o{ AirspaceSector : "traverses"
+    AirspaceSector ||--|| ControlPosition : "managed-by"
+    TrafficFlowRestriction ||--o{ AirspaceSector : "applies-to"
+    ControlPosition ||--o{ OperationalIncident : "reports"
+    ShiftBriefing ||--o{ ControlPosition : "prepares"
+    FlightPlan ||--o{ TrafficFlowRestriction : "subject-to"
 ```
 
 ## State Diagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Initiated
-    Initiated --> Airline: Airline
-    Airline --> FederalAviationAuthority: FederalAviationAuthority
-    FederalAviationAuthority --> MilitaryAirCommand: MilitaryAirCommand
-    MilitaryAirCommand --> ValidationCheck: needs review
-    ValidationCheck --> FederalAviationAuthority: corrections needed
-    ValidationCheck --> WeatherService: approved
-    ValidationCheck --> WeatherService: WeatherService
-    WeatherService --> AirportOperations: AirportOperations
-    AirportOperations --> PilotInCommand: PilotInCommand
-    PilotInCommand --> [*]
+    [*] --> BriefingConducted
+    BriefingConducted --> PositionOpened : controlPositionOpened
+    PositionOpened --> HandoffCompleted : handoffCompleted
+    HandoffCompleted --> RestrictionIssued : trafficRestrictionIssued
+    RestrictionIssued --> SectorOverloaded : sectorOverloaded
+    SectorOverloaded --> RestrictionIssued : trafficRestrictionIssued
+    HandoffCompleted --> EmergencyDeclared : emergencyDeclared
+    EmergencyDeclared --> IncidentReported : incidentReported
+    IncidentReported --> PositionOpened : controlPositionOpened
+    IncidentReported --> [*]
 ```
 
 ## Workflow

@@ -90,25 +90,27 @@ Coordinating shipping activities with external parties involves managing the com
 
 ```mermaid
 erDiagram
-    FreightCarrier ||--o{ FreightForwarder : includes
-    FreightForwarder ||--o{ CustomsBroker : includes
-    CustomsBroker ||--o{ ReceivingCustomer : includes
+    ShipmentOrder ||--o{ CarrierBooking : "reserves"
+    CarrierBooking ||--|| BillOfLading : "generates"
+    ShipmentOrder ||--o{ CommercialInvoice : "requires"
+    ShipmentOrder ||--|| CustomsDeclaration : "triggers"
+    CarrierBooking ||--o{ TrackingRecord : "produces"
+    TrackingRecord ||--o| DeliveryConfirmation : "confirms"
 ```
 
 ## State Diagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Initiated
-    Initiated --> FreightCarrier: FreightCarrier
-    FreightCarrier --> FreightForwarder: FreightForwarder
-    FreightForwarder --> CustomsBroker: CustomsBroker
-    CustomsBroker --> ValidationCheck: needs review
-    ValidationCheck --> FreightForwarder: corrections needed
-    ValidationCheck --> ReceivingCustomer: approved
-    ValidationCheck --> ReceivingCustomer: ReceivingCustomer
-    ReceivingCustomer --> PortAuthority: PortAuthority
-    PortAuthority --> [*]
+    [*] --> Booked
+    Booked --> Documented : documentationPrepared
+    Documented --> DeclaredForCustoms : customsDeclared
+    DeclaredForCustoms --> Dispatched : shipmentDispatched
+    Dispatched --> InTransit : consignmentTracked
+    InTransit --> Delivered : deliveryConfirmed
+    InTransit --> ExceptionRaised : exceptionRaised
+    ExceptionRaised --> InTransit : consignmentTracked
+    Delivered --> [*]
 ```
 
 ## Workflow

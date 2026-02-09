@@ -87,25 +87,28 @@ Sewing equipment operation covers the full lifecycle of running industrial sewin
 
 ```mermaid
 erDiagram
-    SewingMachine ||--|| ProductionRun : "uses"
-    SewingMachine ||--|| StitchProfile : "uses"
-    SewingMachine ||--|| ThreadSetup : "uses"
-    SewingMachine ||--o{ MaintenanceLog : "generates"
-    SewingMachine ||--o{ DefectRecord : "generates"
+    SewingMachine ||--|{ ProductionRun : "executes"
+    SewingMachine ||--|| StitchProfile : "applies"
+    SewingMachine ||--|| ThreadSetup : "loaded-with"
+    SewingMachine ||--o{ MaintenanceLog : "accumulates"
+    ProductionRun ||--o{ DefectRecord : "reports"
 ```
 
 ## State Diagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Uncut
-    Uncut --> Cut
-    Cut --> Sewn
-    Sewn --> QualityCheck
-    QualityCheck --> Repair
-    Repair --> Sewn
-    QualityCheck --> Finished
-    Finished --> [*]
+    [*] --> Idle : machineSetupComplete
+    Idle --> Configured : stitchConfigured
+    Configured --> Running : productionStarted
+    Running --> Paused : productionPaused
+    Paused --> Running : productionStarted
+    Running --> Servicing : maintenancePerformed
+    Servicing --> Idle : machineSetupComplete
+    Running --> Complete : productionCompleted
+    Running --> Defective : defectDetected
+    Defective --> Paused : productionPaused
+    Complete --> [*]
 ```
 
 ## Workflow

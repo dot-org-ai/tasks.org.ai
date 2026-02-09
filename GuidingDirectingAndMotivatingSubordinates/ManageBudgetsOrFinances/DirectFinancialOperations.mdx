@@ -87,30 +87,27 @@ Directing financial operations involves the hands-on management and supervision 
 
 ```mermaid
 erDiagram
-    Vendor }o--|| Customer : "relates to"
-    Vendor }o--|| PayrollProcessor : "relates to"
-    Vendor }o--|| BankPartner : "relates to"
-    Vendor }o--|| TaxAuthority : "relates to"
-    Customer }o--|| PayrollProcessor : "relates to"
-    Customer }o--|| BankPartner : "relates to"
-    Customer }o--|| TaxAuthority : "relates to"
-    PayrollProcessor ||--o{ BankPartner : includes
+    Invoice ||--o{ PaymentBatch : "groups-into"
+    PayrollRun ||--|| GeneralLedger : "posts-to"
+    PaymentBatch ||--|| BankReconciliation : "reconciles"
+    GeneralLedger ||--|| CashPosition : "summarizes"
+    BankReconciliation ||--|| GeneralLedger : "verifies"
+    Invoice ||--|| GeneralLedger : "records"
 ```
 
 ## State Diagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Initiated
-    Initiated --> Vendor: Vendor
-    Vendor --> Customer: Customer
-    Customer --> PayrollProcessor: PayrollProcessor
-    PayrollProcessor --> ValidationCheck: needs review
-    ValidationCheck --> Customer: corrections needed
-    ValidationCheck --> BankPartner: approved
-    ValidationCheck --> BankPartner: BankPartner
-    BankPartner --> TaxAuthority: TaxAuthority
-    TaxAuthority --> [*]
+    [*] --> InvoicesProcessed
+    InvoicesProcessed --> PaymentBatchExecuted : paymentBatchExecuted
+    PaymentBatchExecuted --> PayrollCompleted : payrollCompleted
+    PayrollCompleted --> BankReconciled : bankReconciliationCompleted
+    BankReconciled --> CashPositionUpdated : cashPositionUpdated
+    CashPositionUpdated --> ControlViolationDetected : internalControlViolationDetected
+    ControlViolationDetected --> InvoicesProcessed : invoicesProcessed
+    CashPositionUpdated --> PeriodClosed : accountingPeriodClosed
+    PeriodClosed --> [*]
 ```
 
 ## Workflow
